@@ -10,11 +10,15 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.routes_alerts import router as alerts_router
 from app.api.routes_decisions import router as decisions_router
 from app.api.routes_health import router as health_router
 from app.api.routes_inference import router as inference_router
 from app.api.routes_models import router as models_router
 from app.api.routes_pcap import router as pcap_router
+from app.api.routes_telemetry import router as telemetry_router
+from app.core.config import settings
+from app.core.database import check_database_connection
 from app.services.model_registry import get_model_registry
 from app.services.preprocessor import FeatureValidationError
 
@@ -29,6 +33,22 @@ logger = logging.getLogger("backend.app")
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup and shutdown lifespan context."""
     logger.info("Initializing AI Network Anomaly Detection Platform...")
+
+    # 1. Check database connectivity
+    db_status = await check_database_connection()
+    if db_status["connected"]:
+        logger.info(f"Database connection established ({db_status['dialect']}). Persistent storage active.")
+    else:
+        if settings.DATABASE_REQUIRED:
+            err_msg = f"DATABASE_REQUIRED=true but database connection failed: {db_status.get('error')}"
+            logger.critical(err_msg)
+            raise RuntimeError(err_msg)
+        else:
+            logger.warning(
+                f"Database unavailable. Running in explicit ephemeral mode (DATABASE_REQUIRED=false). Error: {db_status.get('error')}"
+            )
+
+    # 2. Preload ML models
     registry = get_model_registry()
     try:
         sup = registry.get_default_supervised_model()
@@ -38,7 +58,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         )
     except Exception as e:
         logger.warning(f"Could not preload default models on startup: {e}")
+
     yield
+
     logger.info("Shutting down AI Network Anomaly Detection Platform...")
 
 
@@ -48,7 +70,7 @@ app = FastAPI(
     description=(
         "Production-oriented ML inference service for defensive network flow analysis. "
         "Integrates supervised multi-class attack detection (XGBoost, Random Forest, Logistic Regression) "
-        "with statistical anomaly detection (Isolation Forest) and hybrid risk-decision triage."
+        "with statistical anomaly detection (Isolation Forest), hybrid risk-decision triage, and persistent PostgreSQL telemetry."
     ),
     lifespan=lifespan,
 )
@@ -85,4 +107,5 @@ app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(inference_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(pcap_router, prefix="/api/v1")
-
+app.include_router(telemetry_router, prefix="/api/v1")
+app.include_router(alerts_router, prefix="/api/v1")

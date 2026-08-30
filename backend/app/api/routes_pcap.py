@@ -2,23 +2,22 @@
 
 POST /api/v1/pcap/analyze — Upload and analyze a PCAP/PCAPNG file.
 
-Security and resource constraints:
-- Configurable max upload size (default 50 MB)
-- PCAP/PCAPNG magic byte validation before processing
-- Bounded flow count (default 10,000 per analysis)
-- Secure temporary file handling via SpooledTemporaryFile
-- No arbitrary model filesystem paths — uses production defaults
+Integrates downstream PostgreSQL persistence without modifying Stage 3-6B logic.
 """
 
 from __future__ import annotations
 
+import hashlib
 import io
 import logging
 import tempfile
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.database import get_db
 from app.schemas.pcap import (
     PcapAnalysisResponse,
     PcapAnalysisSummary,
@@ -27,6 +26,7 @@ from app.schemas.pcap import (
     PcapFlowResult,
 )
 from app.services.pcap_analysis_service import PcapAnalysisService
+from app.services.telemetry_service import TelemetryPersistenceService
 
 logger = logging.getLogger(__name__)
 
@@ -54,23 +54,21 @@ def _validate_pcap_magic(header: bytes) -> bool:
 @router.post("/pcap/analyze", response_model=PcapAnalysisResponse)
 async def analyze_pcap(
     file: Annotated[UploadFile, File(description="PCAP or PCAPNG capture file")],
+    db: AsyncSession = Depends(get_db),
 ) -> PcapAnalysisResponse:
     """Upload and analyze a PCAP/PCAPNG file through the validated ML inference pipeline.
 
     Pipeline: PCAP → packet parsing → stateful flow reconstruction → canonical 48-feature
     extraction → XGBoost K48 classification + Isolation Forest K48 anomaly detection
-    → Hybrid Risk Engine → structured results.
-
-    Stage 6A validation evidence: 617 authentic PCAP flows validated against XGBoost K48
-    with 99.84% prediction agreement. Isolation Forest is used as the production anomaly
-    detector but was not part of the 617-flow model-compatibility validation.
+    → Hybrid Risk Engine → downstream PostgreSQL telemetry persistence → structured response.
     """
-    # Validate filename
     filename = file.filename or "unknown.pcap"
 
     # Read file into memory-backed buffer with size limit enforcement
-    spool = tempfile.SpooledTemporaryFile(max_size=5 * 1024 * 1024)  # 5MB memory threshold
+    spool = tempfile.SpooledTemporaryFile(max_size=5 * 1024 * 1024)
     total_read = 0
+    sha256 = hashlib.sha256()
+
     try:
         while True:
             chunk = await file.read(65536)
@@ -84,6 +82,7 @@ async def analyze_pcap(
                     detail=f"File size exceeds maximum allowed limit of {MAX_UPLOAD_BYTES // (1024*1024)} MB.",
                 )
             spool.write(chunk)
+            sha256.update(chunk)
     except HTTPException:
         raise
     except Exception as e:
@@ -111,7 +110,7 @@ async def analyze_pcap(
         )
     spool.seek(0)
 
-    # Run the analysis pipeline
+    # Step 1: Run the ML analysis pipeline (Stage 6A + Stage 4)
     try:
         service = PcapAnalysisService(
             flow_timeout_sec=120.0,
@@ -127,7 +126,38 @@ async def analyze_pcap(
     finally:
         spool.close()
 
-    # Build response
+    # Step 2: Downstream PostgreSQL persistence
+    file_hash = sha256.hexdigest()
+    persisted = False
+    job_id_str: Optional[str] = None
+    persistence_error: Optional[str] = None
+
+    if db is not None:
+        try:
+            telemetry_svc = TelemetryPersistenceService(db)
+            job = await telemetry_svc.persist_pcap_analysis(
+                result=result,
+                filename=filename,
+                file_size_bytes=total_read,
+                file_sha256=file_hash,
+                source_channel="PCAP_BATCH",
+            )
+            persisted = True
+            job_id_str = str(job.id)
+        except Exception as e:
+            try:
+                await db.rollback()
+            except Exception:
+                pass
+            persistence_error = str(e)
+            logger.warning("Downstream PostgreSQL persistence failed: %s", e)
+            if settings.DATABASE_REQUIRED:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Inference succeeded but database persistence failed (DATABASE_REQUIRED=true): {e}",
+                ) from e
+
+    # Step 3: Build response
     flow_results: list[PcapFlowResult] = []
     for af in result.analyzed_flows:
         prov = PcapFlowProvenanceResponse(
@@ -158,6 +188,7 @@ async def analyze_pcap(
                 severity=af.severity,
                 status=af.status,
                 explanation=af.explanation,
+                features=af.features.model_dump(),
             )
         )
 
@@ -174,6 +205,9 @@ async def analyze_pcap(
         processing_time_ms=result.processing_time_ms,
         supervised_model_key=result.supervised_model_key,
         anomaly_model_key=result.anomaly_model_key,
+        job_id=job_id_str,
+        persisted=persisted,
+        persistence_error=persistence_error,
     )
 
     return PcapAnalysisResponse(summary=summary, flows=flow_results)

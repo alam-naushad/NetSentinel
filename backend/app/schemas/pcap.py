@@ -10,6 +10,7 @@ Design decisions:
 
 from __future__ import annotations
 
+from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.schemas.decisions import DecisionPreviewResponse
@@ -89,6 +90,9 @@ class PcapAnalysisSummary(BaseModel):
     processing_time_ms: float = Field(..., description="Total server-side processing time")
     supervised_model_key: str = Field(..., description="Supervised model used")
     anomaly_model_key: str = Field(..., description="Anomaly model used")
+    job_id: Optional[str] = Field(default=None, description="Persisted database job ID if persistent storage is active")
+    persisted: bool = Field(default=False, description="Whether the analysis was persisted to PostgreSQL")
+    persistence_error: Optional[str] = Field(default=None, description="Error message if persistence failed in non-blocking mode")
 
 
 class PcapAnalysisResponse(BaseModel):

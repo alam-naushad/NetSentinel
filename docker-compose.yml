@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: soc_telemetry_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: soc_telemetry
+      POSTGRES_USER: soc_user
+      POSTGRES_PASSWORD: soc_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soc_user -d soc_telemetry"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

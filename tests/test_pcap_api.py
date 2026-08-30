@@ -40,16 +40,41 @@ from app.services.pcap.flow_reconstructor import FlowReconstructor
 from app.services.pcap_analysis_service import PcapAnalysisService
 from app.services.preprocessor import InferencePreprocessor
 
+from app.core.database import get_db
+from app.db.base import Base
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAMPLES_DIR = PROJECT_ROOT / "data" / "samples"
 
 
-class PcapApiTests(unittest.TestCase):
+class PcapApiTests(unittest.IsolatedAsyncioTestCase):
     """Integration test suite for POST /api/v1/pcap/analyze and PCAP inference pipeline."""
 
-    def setUp(self):
+    async def asyncSetUp(self):
+        self.engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
+
+        async def override_get_db():
+            async with self.session_factory() as session:
+                try:
+                    yield session
+                    await session.commit()
+                except Exception:
+                    await session.rollback()
+                    raise
+
+        app.dependency_overrides[get_db] = override_get_db
         self.client = TestClient(app)
         self.registry = get_model_registry()
+
+    async def asyncTearDown(self):
+        app.dependency_overrides.clear()
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+        await self.engine.dispose()
 
     def _create_synthetic_tcp_pcap(self) -> bytes:
         """Create a synthetic PCAP with a completed TCP 3-way handshake + payload + teardown."""

@@ -11,7 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-export type TabId = 'overview' | 'single' | 'batch' | 'pcap' | 'models' | 'analytics';
+export type TabId = 'overview' | 'single' | 'batch' | 'pcap' | 'alerts' | 'history' | 'models' | 'analytics';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -21,9 +21,11 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const navItems = [
     { id: 'overview' as TabId, label: 'Security Overview', icon: <ShieldAlert className="w-4 h-4" />, badge: null },
+    { id: 'alerts' as TabId, label: 'Incident Alerts', icon: <ShieldAlert className="w-4 h-4 text-red-400" />, badge: 'Triage' },
     { id: 'single' as TabId, label: 'Single-Flow Analysis', icon: <Sliders className="w-4 h-4" />, badge: 'Live' },
     { id: 'batch' as TabId, label: 'Batch Flow Analysis', icon: <Layers className="w-4 h-4" />, badge: '5k Max' },
     { id: 'pcap' as TabId, label: 'PCAP File Analysis', icon: <FileCode2 className="w-4 h-4" />, badge: '10k Max' },
+    { id: 'history' as TabId, label: 'Historical Telemetry', icon: <Database className="w-4 h-4 text-purple-400" />, badge: 'Postgres' },
     { id: 'models' as TabId, label: 'Model Registry', icon: <Cpu className="w-4 h-4" />, badge: '16' },
     { id: 'analytics' as TabId, label: 'Session Analytics', icon: <BarChart3 className="w-4 h-4" />, badge: null },
   ];
