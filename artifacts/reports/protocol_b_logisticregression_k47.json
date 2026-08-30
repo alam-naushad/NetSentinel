@@ -1,0 +1,193 @@
+{
+  "model_name": "LogisticRegression",
+  "protocol": "B",
+  "feature_set": "K47",
+  "n_features": 47,
+  "feature_names": [
+    "psh_flag_count",
+    "bwd_packet_length_mean",
+    "min_seg_size_fwd",
+    "bwd_packet_length_std",
+    "bwd_packet_length_min",
+    "max_packet_length",
+    "ack_flag_count",
+    "packet_length_mean",
+    "fwd_iat_std",
+    "idle_min",
+    "init_win_bytes_fwd",
+    "packet_length_variance",
+    "min_packet_length",
+    "fwd_packet_length_max",
+    "act_data_pkt_fwd",
+    "flow_iat_std",
+    "total_forward_packets",
+    "down_up_ratio",
+    "flow_iat_mean",
+    "avg_fwd_segment_size",
+    "fwd_header_length",
+    "bwd_header_length",
+    "fwd_iat_total",
+    "fin_flag_count",
+    "bwd_iat_total",
+    "fwd_packets_per_sec",
+    "urg_flag_count",
+    "init_win_bytes_bwd",
+    "fwd_iat_mean",
+    "fwd_packet_length_min",
+    "total_forward_bytes",
+    "bwd_packets_per_sec",
+    "syn_flag_count",
+    "bwd_iat_max",
+    "bwd_iat_mean",
+    "bwd_iat_std",
+    "active_mean",
+    "flow_bytes_per_sec",
+    "active_min",
+    "flow_iat_min",
+    "active_max",
+    "fwd_iat_min",
+    "idle_std",
+    "bwd_iat_min",
+    "active_std",
+    "fwd_urg_flags",
+    "ece_flag_count"
+  ],
+  "random_seed": 42,
+  "training_metadata": {
+    "model_name": "LogisticRegression",
+    "hyperparameters": {
+      "max_iter": 1000,
+      "solver": "lbfgs",
+      "C": 1.0,
+      "class_weight": "balanced",
+      "random_state": 42
+    },
+    "training_time_seconds": 127.8826,
+    "training_rows": 1666479,
+    "scaling_applied": true,
+    "class_imbalance_strategy": "class_weight='balanced'"
+  },
+  "regime_a_known_class_generalization": {
+    "n_benign_test_flows": 870281,
+    "n_false_positives": 178241,
+    "n_true_negatives": 692040,
+    "fpr": 0.204809,
+    "tnr_specificity": 0.795191,
+    "false_positive_distribution": {
+      "BRUTE_FORCE": 95089,
+      "DOS": 83152
+    }
+  },
+  "regime_b_unseen_attack_open_set": {
+    "aggregate_nadr": 0.714803,
+    "aggregate_escape_rate": 0.285197,
+    "total_unseen_flows": 288821,
+    "total_detected": 206450,
+    "open_set_roc_auc": 0.888339,
+    "open_set_pr_auc": 0.687755,
+    "per_family": {
+      "INFILTRATION": {
+        "n_total": 36,
+        "n_detected_as_attack": 5,
+        "n_escaped_as_benign": 31,
+        "nadr": 0.138889,
+        "escape_rate": 0.861111,
+        "prediction_distribution": {
+          "BENIGN": {
+            "count": 31,
+            "fraction": 0.861111
+          },
+          "BRUTE_FORCE": {
+            "count": 3,
+            "fraction": 0.083333
+          },
+          "DOS": {
+            "count": 2,
+            "fraction": 0.055556
+          }
+        }
+      },
+      "BOT": {
+        "n_total": 1956,
+        "n_detected_as_attack": 668,
+        "n_escaped_as_benign": 1288,
+        "nadr": 0.341513,
+        "escape_rate": 0.658487,
+        "prediction_distribution": {
+          "BENIGN": {
+            "count": 1288,
+            "fraction": 0.658487
+          },
+          "BRUTE_FORCE": {
+            "count": 668,
+            "fraction": 0.341513
+          }
+        }
+      },
+      "PORT_SCAN": {
+        "n_total": 158804,
+        "n_detected_as_attack": 77882,
+        "n_escaped_as_benign": 80922,
+        "nadr": 0.490428,
+        "escape_rate": 0.509572,
+        "prediction_distribution": {
+          "BENIGN": {
+            "count": 80922,
+            "fraction": 0.509572
+          },
+          "BRUTE_FORCE": {
+            "count": 77564,
+            "fraction": 0.488426
+          },
+          "DOS": {
+            "count": 318,
+            "fraction": 0.002002
+          }
+        }
+      },
+      "DDOS": {
+        "n_total": 128025,
+        "n_detected_as_attack": 127895,
+        "n_escaped_as_benign": 130,
+        "nadr": 0.998985,
+        "escape_rate": 0.001015,
+        "prediction_distribution": {
+          "BENIGN": {
+            "count": 130,
+            "fraction": 0.001015
+          },
+          "BRUTE_FORCE": {
+            "count": 16,
+            "fraction": 0.000125
+          },
+          "DOS": {
+            "count": 127879,
+            "fraction": 0.99886
+          }
+        }
+      }
+    }
+  },
+  "inference_time_seconds": 0.362588,
+  "inference_samples": 1161282,
+  "artifact_path": "C:\\Users\\ASUS\\Documents\\Codex\\2026-08-29\\i-x20\\artifacts\\models\\protocol_b_logisticregression_k47.joblib",
+  "artifact_size_bytes": 3998,
+  "environment": {
+    "python_version": "3.12.13 (main, Aug  7 2026, 02:26:41) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "sklearn_version": "1.9.0",
+    "xgboost_version": "2.1.4",
+    "numpy_version": "2.5.2",
+    "pandas_version": "2.3.3",
+    "joblib_version": "1.5.3"
+  },
+  "timestamp": "2026-08-30T08:14:41.015276+00:00",
+  "methodological_notes": [
+    "Protocol B trains on Mon-Wed, tests on Thu-Fri.",
+    "Regime A evaluates BENIGN specificity (cross-day FPR).",
+    "Regime B evaluates unseen attack families (NADR, escape rate).",
+    "Ordinary 9-class F1 is NOT reported for unseen families.",
+    "Unseen families in test: ['WEB_ATTACK', 'INFILTRATION', 'BOT', 'PORT_SCAN', 'DDOS']",
+    "Known train attack families: ['BRUTE_FORCE', 'DOS']"
+  ]
+}

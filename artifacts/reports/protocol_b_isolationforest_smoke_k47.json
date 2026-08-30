@@ -1,0 +1,203 @@
+{
+  "model_name": "IsolationForest",
+  "protocol": "B_Regime_C",
+  "feature_set": "smoke_K47",
+  "n_features": 47,
+  "feature_names": [
+    "psh_flag_count",
+    "bwd_packet_length_mean",
+    "min_seg_size_fwd",
+    "bwd_packet_length_std",
+    "bwd_packet_length_min",
+    "max_packet_length",
+    "ack_flag_count",
+    "packet_length_mean",
+    "fwd_iat_std",
+    "idle_min",
+    "init_win_bytes_fwd",
+    "packet_length_variance",
+    "min_packet_length",
+    "fwd_packet_length_max",
+    "act_data_pkt_fwd",
+    "flow_iat_std",
+    "total_forward_packets",
+    "down_up_ratio",
+    "flow_iat_mean",
+    "avg_fwd_segment_size",
+    "fwd_header_length",
+    "bwd_header_length",
+    "fwd_iat_total",
+    "fin_flag_count",
+    "bwd_iat_total",
+    "fwd_packets_per_sec",
+    "urg_flag_count",
+    "init_win_bytes_bwd",
+    "fwd_iat_mean",
+    "fwd_packet_length_min",
+    "total_forward_bytes",
+    "bwd_packets_per_sec",
+    "syn_flag_count",
+    "bwd_iat_max",
+    "bwd_iat_mean",
+    "bwd_iat_std",
+    "active_mean",
+    "flow_bytes_per_sec",
+    "active_min",
+    "flow_iat_min",
+    "active_max",
+    "fwd_iat_min",
+    "idle_std",
+    "bwd_iat_min",
+    "active_std",
+    "fwd_urg_flags",
+    "ece_flag_count"
+  ],
+  "random_seed": 42,
+  "training_metadata": {
+    "model_name": "IsolationForest",
+    "hyperparameters": {
+      "n_estimators": 200,
+      "max_samples": 0.5,
+      "contamination": "auto",
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "training_time_seconds": 0.5407,
+    "training_rows": 22920,
+    "training_data": "BENIGN-only traffic",
+    "scaling_applied": true,
+    "class_imbalance_strategy": "N/A (unsupervised, trained on benign only)"
+  },
+  "calibration": {
+    "method": "benign_validation_slice (80/20 of Mon-Wed benign)",
+    "fpr_targets": [
+      0.01,
+      0.05
+    ],
+    "thresholds": {
+      "0.01": -0.009352,
+      "0.05": 0.083389
+    },
+    "n_benign_train": 22920,
+    "n_benign_val": 5730
+  },
+  "test_metrics": {
+    "roc_auc": 0.786008,
+    "pr_auc": 0.558652,
+    "threshold_results": {
+      "0.01": {
+        "threshold_value": -0.009352,
+        "target_fpr": 0.01,
+        "actual_fpr": 0.021583,
+        "recall": 0.160525,
+        "precision": 0.765478,
+        "tp": 1224,
+        "fp": 375,
+        "tn": 17000,
+        "fn": 6401,
+        "n_benign": 17375,
+        "n_attack": 7625
+      },
+      "0.05": {
+        "threshold_value": 0.083389,
+        "target_fpr": 0.05,
+        "actual_fpr": 0.070273,
+        "recall": 0.252721,
+        "precision": 0.612135,
+        "tp": 1927,
+        "fp": 1221,
+        "tn": 16154,
+        "fn": 5698,
+        "n_benign": 17375,
+        "n_attack": 7625
+      }
+    }
+  },
+  "per_family_detection": {
+    "0.01": {
+      "BENIGN": {
+        "detected": 375,
+        "total": 17375,
+        "detection_rate": 0.021583
+      },
+      "BOT": {
+        "detected": 9,
+        "total": 519,
+        "detection_rate": 0.017341
+      },
+      "DDOS": {
+        "detected": 1197,
+        "total": 3042,
+        "detection_rate": 0.393491
+      },
+      "INFILTRATION": {
+        "detected": 16,
+        "total": 36,
+        "detection_rate": 0.444444
+      },
+      "PORT_SCAN": {
+        "detected": 2,
+        "total": 3492,
+        "detection_rate": 0.000573
+      },
+      "UNKNOWN": {
+        "detected": 0,
+        "total": 536,
+        "detection_rate": 0.0
+      }
+    },
+    "0.05": {
+      "BENIGN": {
+        "detected": 1221,
+        "total": 17375,
+        "detection_rate": 0.070273
+      },
+      "BOT": {
+        "detected": 12,
+        "total": 519,
+        "detection_rate": 0.023121
+      },
+      "DDOS": {
+        "detected": 1852,
+        "total": 3042,
+        "detection_rate": 0.60881
+      },
+      "INFILTRATION": {
+        "detected": 30,
+        "total": 36,
+        "detection_rate": 0.833333
+      },
+      "PORT_SCAN": {
+        "detected": 16,
+        "total": 3492,
+        "detection_rate": 0.004582
+      },
+      "UNKNOWN": {
+        "detected": 17,
+        "total": 536,
+        "detection_rate": 0.031716
+      }
+    }
+  },
+  "inference_time_seconds": 0.383427,
+  "inference_samples": 25000,
+  "artifact_path": "C:\\Users\\ASUS\\Documents\\Codex\\2026-08-29\\i-x20\\artifacts\\models\\protocol_b_isolationforest_smoke_k47.joblib",
+  "artifact_size_bytes": 3316489,
+  "environment": {
+    "python_version": "3.12.13 (main, Aug  7 2026, 02:26:41) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "sklearn_version": "1.9.0",
+    "xgboost_version": "2.1.4",
+    "numpy_version": "2.5.2",
+    "pandas_version": "2.3.3",
+    "joblib_version": "1.5.3"
+  },
+  "timestamp": "2026-08-30T07:13:30.962007+00:00",
+  "methodological_notes": [
+    "Protocol B Regime C: IF cross-capture anomaly detection.",
+    "Trained exclusively on Mon-Wed BENIGN traffic.",
+    "Threshold calibrated on held-out 20% of Mon-Wed benign.",
+    "decision_function convention: lower scores = more anomalous.",
+    "All test attack families are unseen: ['WEB_ATTACK', 'INFILTRATION', 'BOT', 'PORT_SCAN', 'DDOS']"
+  ]
+}

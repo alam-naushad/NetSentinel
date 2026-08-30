@@ -1,0 +1,217 @@
+{
+  "model_name": "IsolationForest",
+  "protocol": "A",
+  "feature_set": "K48",
+  "n_features": 48,
+  "feature_names": [
+    "psh_flag_count",
+    "bwd_packet_length_mean",
+    "min_seg_size_fwd",
+    "bwd_packet_length_std",
+    "bwd_packet_length_min",
+    "max_packet_length",
+    "destination_port",
+    "ack_flag_count",
+    "packet_length_mean",
+    "fwd_iat_std",
+    "idle_min",
+    "init_win_bytes_fwd",
+    "packet_length_variance",
+    "min_packet_length",
+    "fwd_packet_length_max",
+    "act_data_pkt_fwd",
+    "flow_iat_std",
+    "total_forward_packets",
+    "down_up_ratio",
+    "flow_iat_mean",
+    "avg_fwd_segment_size",
+    "fwd_header_length",
+    "bwd_header_length",
+    "fwd_iat_total",
+    "fin_flag_count",
+    "bwd_iat_total",
+    "fwd_packets_per_sec",
+    "urg_flag_count",
+    "init_win_bytes_bwd",
+    "fwd_iat_mean",
+    "fwd_packet_length_min",
+    "total_forward_bytes",
+    "bwd_packets_per_sec",
+    "syn_flag_count",
+    "bwd_iat_max",
+    "bwd_iat_mean",
+    "bwd_iat_std",
+    "active_mean",
+    "flow_bytes_per_sec",
+    "active_min",
+    "flow_iat_min",
+    "active_max",
+    "fwd_iat_min",
+    "idle_std",
+    "bwd_iat_min",
+    "active_std",
+    "fwd_urg_flags",
+    "ece_flag_count"
+  ],
+  "random_seed": 42,
+  "training_metadata": {
+    "model_name": "IsolationForest",
+    "hyperparameters": {
+      "n_estimators": 200,
+      "max_samples": 0.5,
+      "contamination": "auto",
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "training_time_seconds": 44.7982,
+    "training_rows": 1589843,
+    "training_data": "BENIGN-only traffic",
+    "scaling_applied": true,
+    "class_imbalance_strategy": "N/A (unsupervised, trained on benign only)"
+  },
+  "calibration": {
+    "method": "benign_validation_quantile",
+    "fpr_targets": [
+      0.01,
+      0.05
+    ],
+    "thresholds": {
+      "0.01": 0.051838,
+      "0.05": 0.120016
+    },
+    "n_benign_validation_flows": 340681
+  },
+  "test_metrics": {
+    "roc_auc": 0.81651,
+    "pr_auc": 0.629627,
+    "threshold_results": {
+      "0.01": {
+        "threshold_value": 0.051838,
+        "target_fpr": 0.01,
+        "actual_fpr": 0.009977,
+        "recall": 0.368789,
+        "precision": 0.900576,
+        "tp": 30788,
+        "fp": 3399,
+        "tn": 337282,
+        "fn": 52696,
+        "n_benign": 340681,
+        "n_attack": 83484
+      },
+      "0.05": {
+        "threshold_value": 0.120016,
+        "target_fpr": 0.05,
+        "actual_fpr": 0.049803,
+        "recall": 0.435844,
+        "precision": 0.681986,
+        "tp": 36386,
+        "fp": 16967,
+        "tn": 323714,
+        "fn": 47098,
+        "n_benign": 340681,
+        "n_attack": 83484
+      }
+    }
+  },
+  "per_family_detection": {
+    "0.01": {
+      "BENIGN": {
+        "detected": 3399,
+        "total": 340681,
+        "detection_rate": 0.009977
+      },
+      "BOT": {
+        "detected": 5,
+        "total": 293,
+        "detection_rate": 0.017065
+      },
+      "BRUTE_FORCE": {
+        "detected": 0,
+        "total": 2075,
+        "detection_rate": 0.0
+      },
+      "DDOS": {
+        "detected": 7801,
+        "total": 19204,
+        "detection_rate": 0.406217
+      },
+      "DOS": {
+        "detected": 22961,
+        "total": 37759,
+        "detection_rate": 0.608093
+      },
+      "INFILTRATION": {
+        "detected": 0,
+        "total": 5,
+        "detection_rate": 0.0
+      },
+      "PORT_SCAN": {
+        "detected": 21,
+        "total": 23821,
+        "detection_rate": 0.000882
+      },
+      "UNKNOWN": {
+        "detected": 0,
+        "total": 327,
+        "detection_rate": 0.0
+      }
+    },
+    "0.05": {
+      "BENIGN": {
+        "detected": 16967,
+        "total": 340681,
+        "detection_rate": 0.049803
+      },
+      "BOT": {
+        "detected": 8,
+        "total": 293,
+        "detection_rate": 0.027304
+      },
+      "BRUTE_FORCE": {
+        "detected": 0,
+        "total": 2075,
+        "detection_rate": 0.0
+      },
+      "DDOS": {
+        "detected": 11227,
+        "total": 19204,
+        "detection_rate": 0.584618
+      },
+      "DOS": {
+        "detected": 24995,
+        "total": 37759,
+        "detection_rate": 0.661961
+      },
+      "INFILTRATION": {
+        "detected": 1,
+        "total": 5,
+        "detection_rate": 0.2
+      },
+      "PORT_SCAN": {
+        "detected": 153,
+        "total": 23821,
+        "detection_rate": 0.006423
+      },
+      "UNKNOWN": {
+        "detected": 2,
+        "total": 327,
+        "detection_rate": 0.006116
+      }
+    }
+  },
+  "inference_time_seconds": 8.799047,
+  "inference_samples": 424165,
+  "inference_latency_per_sample_us": 20.7444,
+  "artifact_path": "C:\\Users\\ASUS\\Documents\\Codex\\2026-08-29\\i-x20\\artifacts\\models\\protocol_a_isolationforest_k48.joblib",
+  "artifact_size_bytes": 39050518,
+  "environment": {
+    "python_version": "3.12.13 (main, Aug  7 2026, 02:26:41) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "sklearn_version": "1.9.0",
+    "xgboost_version": "2.1.4",
+    "numpy_version": "2.5.2",
+    "pandas_version": "2.3.3",
+    "joblib_version": "1.5.3"
+  },
+  "timestamp": "2026-08-30T07:32:27.966954+00:00"
+}

@@ -1,0 +1,426 @@
+{
+  "model_name": "XGBoost",
+  "protocol": "A",
+  "feature_set": "K47",
+  "n_features": 47,
+  "feature_names": [
+    "psh_flag_count",
+    "bwd_packet_length_mean",
+    "min_seg_size_fwd",
+    "bwd_packet_length_std",
+    "bwd_packet_length_min",
+    "max_packet_length",
+    "ack_flag_count",
+    "packet_length_mean",
+    "fwd_iat_std",
+    "idle_min",
+    "init_win_bytes_fwd",
+    "packet_length_variance",
+    "min_packet_length",
+    "fwd_packet_length_max",
+    "act_data_pkt_fwd",
+    "flow_iat_std",
+    "total_forward_packets",
+    "down_up_ratio",
+    "flow_iat_mean",
+    "avg_fwd_segment_size",
+    "fwd_header_length",
+    "bwd_header_length",
+    "fwd_iat_total",
+    "fin_flag_count",
+    "bwd_iat_total",
+    "fwd_packets_per_sec",
+    "urg_flag_count",
+    "init_win_bytes_bwd",
+    "fwd_iat_mean",
+    "fwd_packet_length_min",
+    "total_forward_bytes",
+    "bwd_packets_per_sec",
+    "syn_flag_count",
+    "bwd_iat_max",
+    "bwd_iat_mean",
+    "bwd_iat_std",
+    "active_mean",
+    "flow_bytes_per_sec",
+    "active_min",
+    "flow_iat_min",
+    "active_max",
+    "fwd_iat_min",
+    "idle_std",
+    "bwd_iat_min",
+    "active_std",
+    "fwd_urg_flags",
+    "ece_flag_count"
+  ],
+  "random_seed": 42,
+  "training_metadata": {
+    "model_name": "XGBoost",
+    "hyperparameters": {
+      "n_estimators": 200,
+      "max_depth": 8,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "eval_metric": "mlogloss",
+      "tree_method": "hist",
+      "random_state": 42,
+      "n_jobs": -1,
+      "num_class": 8
+    },
+    "training_time_seconds": 157.3884,
+    "training_rows": 1979432,
+    "scaling_applied": false,
+    "class_imbalance_strategy": "explicit_sample_weight (balanced, inversely proportional to class frequency)",
+    "sample_weight_per_class": {
+      "0": {
+        "count": 1589843,
+        "weight": 0.155631
+      },
+      "1": {
+        "count": 1369,
+        "weight": 180.737034
+      },
+      "2": {
+        "count": 9683,
+        "weight": 25.552928
+      },
+      "3": {
+        "count": 89617,
+        "weight": 2.760961
+      },
+      "4": {
+        "count": 176206,
+        "weight": 1.404203
+      },
+      "5": {
+        "count": 25,
+        "weight": 9897.16
+      },
+      "6": {
+        "count": 111163,
+        "weight": 2.225822
+      },
+      "7": {
+        "count": 1526,
+        "weight": 162.142202
+      }
+    }
+  },
+  "test_metrics": {
+    "accuracy": 0.998694,
+    "macro_f1": 0.877295,
+    "weighted_f1": 0.998771,
+    "binary_fpr": 0.00152,
+    "roc_auc_ovr_macro": 0.999346,
+    "binary_roc_auc": 0.999944,
+    "binary_pr_auc": 0.999767,
+    "per_class": {
+      "BENIGN": {
+        "precision": 0.999932,
+        "recall": 0.99848,
+        "f1_score": 0.999205,
+        "support": 340681
+      },
+      "BOT": {
+        "precision": 0.552381,
+        "recall": 0.989761,
+        "f1_score": 0.709046,
+        "support": 293
+      },
+      "BRUTE_FORCE": {
+        "precision": 0.998075,
+        "recall": 0.999518,
+        "f1_score": 0.998796,
+        "support": 2075
+      },
+      "DDOS": {
+        "precision": 0.999636,
+        "recall": 0.999792,
+        "f1_score": 0.999714,
+        "support": 19204
+      },
+      "DOS": {
+        "precision": 0.996594,
+        "recall": 0.999656,
+        "f1_score": 0.998123,
+        "support": 37759
+      },
+      "INFILTRATION": {
+        "precision": 1.0,
+        "recall": 0.2,
+        "f1_score": 0.333333,
+        "support": 5
+      },
+      "PORT_SCAN": {
+        "precision": 0.993906,
+        "recall": 0.99958,
+        "f1_score": 0.996735,
+        "support": 23821
+      },
+      "UNKNOWN": {
+        "precision": 0.970238,
+        "recall": 0.996942,
+        "f1_score": 0.983409,
+        "support": 327
+      }
+    },
+    "confusion_matrix": [
+      [
+        340163,
+        235,
+        4,
+        7,
+        121,
+        0,
+        144,
+        7
+      ],
+      [
+        3,
+        290,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2074,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      [
+        4,
+        0,
+        0,
+        19200,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        9,
+        0,
+        0,
+        0,
+        37746,
+        0,
+        2,
+        2
+      ],
+      [
+        4,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        0,
+        0,
+        8,
+        0,
+        23811,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        326
+      ]
+    ],
+    "confusion_matrix_labels": [
+      "BENIGN",
+      "BOT",
+      "BRUTE_FORCE",
+      "DDOS",
+      "DOS",
+      "INFILTRATION",
+      "PORT_SCAN",
+      "UNKNOWN"
+    ]
+  },
+  "validation_metrics": {
+    "accuracy": 0.998684,
+    "macro_f1": 0.935621,
+    "weighted_f1": 0.998762,
+    "binary_fpr": 0.001529,
+    "roc_auc_ovr_macro": 0.999872,
+    "binary_roc_auc": 0.999945,
+    "binary_pr_auc": 0.999777,
+    "per_class": {
+      "BENIGN": {
+        "precision": 0.999929,
+        "recall": 0.998471,
+        "f1_score": 0.9992,
+        "support": 340681
+      },
+      "BOT": {
+        "precision": 0.557471,
+        "recall": 0.989796,
+        "f1_score": 0.713235,
+        "support": 294
+      },
+      "BRUTE_FORCE": {
+        "precision": 0.999037,
+        "recall": 1.0,
+        "f1_score": 0.999518,
+        "support": 2074
+      },
+      "DDOS": {
+        "precision": 0.999792,
+        "recall": 0.999792,
+        "f1_score": 0.999792,
+        "support": 19204
+      },
+      "DOS": {
+        "precision": 0.996805,
+        "recall": 0.999735,
+        "f1_score": 0.998268,
+        "support": 37758
+      },
+      "INFILTRATION": {
+        "precision": 1.0,
+        "recall": 0.666667,
+        "f1_score": 0.8,
+        "support": 6
+      },
+      "PORT_SCAN": {
+        "precision": 0.993034,
+        "recall": 0.999454,
+        "f1_score": 0.996234,
+        "support": 23820
+      },
+      "UNKNOWN": {
+        "precision": 0.97281,
+        "recall": 0.984709,
+        "f1_score": 0.978723,
+        "support": 327
+      }
+    },
+    "confusion_matrix": [
+      [
+        340160,
+        231,
+        2,
+        4,
+        117,
+        0,
+        165,
+        2
+      ],
+      [
+        3,
+        291,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        2074,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        4,
+        0,
+        0,
+        19200,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        37748,
+        0,
+        2,
+        3
+      ],
+      [
+        2,
+        0,
+        0,
+        0,
+        0,
+        4,
+        0,
+        0
+      ],
+      [
+        6,
+        0,
+        0,
+        0,
+        3,
+        0,
+        23807,
+        4
+      ],
+      [
+        4,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        322
+      ]
+    ],
+    "confusion_matrix_labels": [
+      "BENIGN",
+      "BOT",
+      "BRUTE_FORCE",
+      "DDOS",
+      "DOS",
+      "INFILTRATION",
+      "PORT_SCAN",
+      "UNKNOWN"
+    ]
+  },
+  "inference_time_seconds": 3.563214,
+  "inference_samples": 424165,
+  "inference_latency_per_sample_us": 8.4005,
+  "artifact_path": "C:\\Users\\ASUS\\Documents\\Codex\\2026-08-29\\i-x20\\artifacts\\models\\protocol_a_xgboost_k47.joblib",
+  "artifact_size_bytes": 1896649,
+  "environment": {
+    "python_version": "3.12.13 (main, Aug  7 2026, 02:26:41) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "sklearn_version": "1.9.0",
+    "xgboost_version": "2.1.4",
+    "numpy_version": "2.5.2",
+    "pandas_version": "2.3.3",
+    "joblib_version": "1.5.3"
+  },
+  "timestamp": "2026-08-30T08:11:31.234613+00:00"
+}

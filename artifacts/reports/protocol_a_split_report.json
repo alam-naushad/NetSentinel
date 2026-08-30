@@ -1,0 +1,153 @@
+{
+  "protocol": "Protocol A (70/15/15 Stratified Random Split)",
+  "seed": 42,
+  "total_rows": 2827761,
+  "train_rows": 1979432,
+  "val_rows": 424164,
+  "test_rows": 424165,
+  "feature_duplicate_summary": {
+    "train_duplicate_rows": 206785,
+    "val_duplicate_rows": 25820,
+    "test_duplicate_rows": 25583,
+    "unique_train_flows": 1772647,
+    "unique_val_flows": 398344,
+    "unique_test_flows": 398582
+  },
+  "class_distribution": {
+    "BENIGN": {
+      "total": 2271205,
+      "train": 1589843,
+      "val": 340681,
+      "test": 340681,
+      "train_pct": 70.0,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "Bot": {
+      "total": 1956,
+      "train": 1369,
+      "val": 294,
+      "test": 293,
+      "train_pct": 69.99,
+      "val_pct": 15.03,
+      "test_pct": 14.98
+    },
+    "DDoS": {
+      "total": 128025,
+      "train": 89617,
+      "val": 19204,
+      "test": 19204,
+      "train_pct": 70.0,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "DoS GoldenEye": {
+      "total": 10293,
+      "train": 7205,
+      "val": 1544,
+      "test": 1544,
+      "train_pct": 70.0,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "DoS Hulk": {
+      "total": 230124,
+      "train": 161087,
+      "val": 34518,
+      "test": 34519,
+      "train_pct": 70.0,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "DoS Slowhttptest": {
+      "total": 5499,
+      "train": 3849,
+      "val": 825,
+      "test": 825,
+      "train_pct": 69.99,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "DoS slowloris": {
+      "total": 5796,
+      "train": 4057,
+      "val": 869,
+      "test": 870,
+      "train_pct": 70.0,
+      "val_pct": 14.99,
+      "test_pct": 15.01
+    },
+    "FTP-Patator": {
+      "total": 7935,
+      "train": 5555,
+      "val": 1190,
+      "test": 1190,
+      "train_pct": 70.01,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "Heartbleed": {
+      "total": 11,
+      "train": 8,
+      "val": 2,
+      "test": 1,
+      "train_pct": 72.73,
+      "val_pct": 18.18,
+      "test_pct": 9.09
+    },
+    "Infiltration": {
+      "total": 36,
+      "train": 25,
+      "val": 6,
+      "test": 5,
+      "train_pct": 69.44,
+      "val_pct": 16.67,
+      "test_pct": 13.89
+    },
+    "PortScan": {
+      "total": 158804,
+      "train": 111163,
+      "val": 23820,
+      "test": 23821,
+      "train_pct": 70.0,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "SSH-Patator": {
+      "total": 5897,
+      "train": 4128,
+      "val": 884,
+      "test": 885,
+      "train_pct": 70.0,
+      "val_pct": 14.99,
+      "test_pct": 15.01
+    },
+    "Web Attack  Brute Force": {
+      "total": 1507,
+      "train": 1055,
+      "val": 226,
+      "test": 226,
+      "train_pct": 70.01,
+      "val_pct": 15.0,
+      "test_pct": 15.0
+    },
+    "Web Attack  Sql Injection": {
+      "total": 21,
+      "train": 15,
+      "val": 3,
+      "test": 3,
+      "train_pct": 71.43,
+      "val_pct": 14.29,
+      "test_pct": 14.29
+    },
+    "Web Attack  XSS": {
+      "total": 652,
+      "train": 456,
+      "val": 98,
+      "test": 98,
+      "train_pct": 69.94,
+      "val_pct": 15.03,
+      "test_pct": 15.03
+    }
+  }
+}

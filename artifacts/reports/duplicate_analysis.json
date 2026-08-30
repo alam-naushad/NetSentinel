@@ -1,0 +1,249 @@
+{
+  "dataset_summary": {
+    "total_cleaned_rows": 2827761,
+    "unique_feature_vectors": 2497155,
+    "total_duplicate_rows": 330606,
+    "duplicate_percentage": 11.6914,
+    "feature_and_label_duplicates": 329888,
+    "cross_label_collision_rows": 718
+  },
+  "class_breakdown": {
+    "BENIGN": {
+      "attack_family": "BENIGN",
+      "total_rows": 2271205,
+      "unique_rows": 2072059,
+      "duplicate_rows": 199146,
+      "duplicate_percentage": 8.7683
+    },
+    "Bot": {
+      "attack_family": "BOT",
+      "total_rows": 1956,
+      "unique_rows": 1948,
+      "duplicate_rows": 8,
+      "duplicate_percentage": 0.409
+    },
+    "DDoS": {
+      "attack_family": "DDOS",
+      "total_rows": 128025,
+      "unique_rows": 128011,
+      "duplicate_rows": 14,
+      "duplicate_percentage": 0.0109
+    },
+    "DoS GoldenEye": {
+      "attack_family": "DOS",
+      "total_rows": 10293,
+      "unique_rows": 10282,
+      "duplicate_rows": 11,
+      "duplicate_percentage": 0.1069
+    },
+    "DoS Hulk": {
+      "attack_family": "DOS",
+      "total_rows": 230124,
+      "unique_rows": 172784,
+      "duplicate_rows": 57340,
+      "duplicate_percentage": 24.917
+    },
+    "DoS Slowhttptest": {
+      "attack_family": "DOS",
+      "total_rows": 5499,
+      "unique_rows": 5228,
+      "duplicate_rows": 271,
+      "duplicate_percentage": 4.9282
+    },
+    "DoS slowloris": {
+      "attack_family": "DOS",
+      "total_rows": 5796,
+      "unique_rows": 5373,
+      "duplicate_rows": 423,
+      "duplicate_percentage": 7.2981
+    },
+    "FTP-Patator": {
+      "attack_family": "BRUTE_FORCE",
+      "total_rows": 7935,
+      "unique_rows": 5931,
+      "duplicate_rows": 2004,
+      "duplicate_percentage": 25.2552
+    },
+    "Heartbleed": {
+      "attack_family": "DOS",
+      "total_rows": 11,
+      "unique_rows": 11,
+      "duplicate_rows": 0,
+      "duplicate_percentage": 0.0
+    },
+    "Infiltration": {
+      "attack_family": "INFILTRATION",
+      "total_rows": 36,
+      "unique_rows": 36,
+      "duplicate_rows": 0,
+      "duplicate_percentage": 0.0
+    },
+    "PortScan": {
+      "attack_family": "PORT_SCAN",
+      "total_rows": 158804,
+      "unique_rows": 90130,
+      "duplicate_rows": 68674,
+      "duplicate_percentage": 43.2445
+    },
+    "SSH-Patator": {
+      "attack_family": "BRUTE_FORCE",
+      "total_rows": 5897,
+      "unique_rows": 3219,
+      "duplicate_rows": 2678,
+      "duplicate_percentage": 45.4129
+    },
+    "Web Attack  Brute Force": {
+      "attack_family": "UNKNOWN",
+      "total_rows": 1507,
+      "unique_rows": 1470,
+      "duplicate_rows": 37,
+      "duplicate_percentage": 2.4552
+    },
+    "Web Attack  Sql Injection": {
+      "attack_family": "UNKNOWN",
+      "total_rows": 21,
+      "unique_rows": 21,
+      "duplicate_rows": 0,
+      "duplicate_percentage": 0.0
+    },
+    "Web Attack  XSS": {
+      "attack_family": "UNKNOWN",
+      "total_rows": 652,
+      "unique_rows": 652,
+      "duplicate_rows": 0,
+      "duplicate_percentage": 0.0
+    }
+  },
+  "file_breakdown": {
+    "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv": {
+      "total_rows": 225709,
+      "unique_rows": 217299,
+      "duplicate_rows": 8410,
+      "duplicate_percentage": 3.726
+    },
+    "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv": {
+      "total_rows": 286060,
+      "unique_rows": 203629,
+      "duplicate_rows": 82431,
+      "duplicate_percentage": 28.816
+    },
+    "Friday-WorkingHours-Morning.pcap_ISCX.csv": {
+      "total_rows": 190902,
+      "unique_rows": 171344,
+      "duplicate_rows": 19558,
+      "duplicate_percentage": 10.245
+    },
+    "Monday-WorkingHours.pcap_ISCX.csv": {
+      "total_rows": 529466,
+      "unique_rows": 502558,
+      "duplicate_rows": 26908,
+      "duplicate_percentage": 5.0821
+    },
+    "Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv": {
+      "total_rows": 288391,
+      "unique_rows": 240044,
+      "duplicate_rows": 48347,
+      "duplicate_percentage": 16.7644
+    },
+    "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv": {
+      "total_rows": 170220,
+      "unique_rows": 154086,
+      "duplicate_rows": 16134,
+      "duplicate_percentage": 9.4783
+    },
+    "Tuesday-WorkingHours.pcap_ISCX.csv": {
+      "total_rows": 445628,
+      "unique_rows": 414118,
+      "duplicate_rows": 31510,
+      "duplicate_percentage": 7.0709
+    },
+    "Wednesday-workingHours.pcap_ISCX.csv": {
+      "total_rows": 691385,
+      "unique_rows": 594077,
+      "duplicate_rows": 97308,
+      "duplicate_percentage": 14.0744
+    }
+  },
+  "sample_collisions": [
+    {
+      "index": 1001762,
+      "raw_label": "DoS slowloris",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 214.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1049904,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 1.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1053008,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 191.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1054389,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 961.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1054853,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 206.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1054861,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 248.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1054862,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 181.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1055621,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 218.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1055794,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 225.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    },
+    {
+      "index": 1057557,
+      "raw_label": "DoS Hulk",
+      "attack_family": "DOS",
+      "destination_port": 80,
+      "flow_duration_ms": 190.0,
+      "source_file": "Wednesday-workingHours.pcap_ISCX.csv"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Node / frontend
+node_modules/
+dist/
+
+# Local configuration and runtime data
+.env
+data/raw/*
+data/extracted/*
+data/processed/*
+data/models/*
+!data/raw/.gitkeep
+!data/extracted/.gitkeep
+!data/processed/.gitkeep
+!data/models/.gitkeep
+
+# ML Model binary artifacts
+artifacts/models/*
+!artifacts/models/.gitkeep
+*.joblib
+
+# Tooling
+.coverage
+htmlcov/
+.DS_Store
+
+# Codex task workspace
+work/

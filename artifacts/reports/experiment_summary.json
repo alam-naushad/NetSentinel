@@ -1,0 +1,27 @@
+{
+  "total_runtime_seconds": 3952.18,
+  "total_runtime_human": "65.9 minutes",
+  "dataset_total_rows": 2827761,
+  "protocol_a_train_test_contamination_count": 34771,
+  "contamination_note": "34,771 feature-identical vectors are shared between Protocol A Train and Test partitions due to row-level random splitting of duplicate flows. This is a known limitation documented in docs/experiments/duplicate_analysis_report.md.",
+  "feature_sets": {
+    "K48": 48,
+    "K47": 47
+  },
+  "models_evaluated": [
+    "LogisticRegression",
+    "RandomForest",
+    "XGBoost",
+    "IsolationForest"
+  ],
+  "environment": {
+    "python_version": "3.12.13 (main, Aug  7 2026, 02:26:41) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "sklearn_version": "1.9.0",
+    "xgboost_version": "2.1.4",
+    "numpy_version": "2.5.2",
+    "pandas_version": "2.3.3",
+    "joblib_version": "1.5.3"
+  },
+  "timestamp": "2026-08-30T08:20:03.869201+00:00"
+}

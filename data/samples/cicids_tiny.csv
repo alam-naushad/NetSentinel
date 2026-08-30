@@ -1,0 +1,11 @@
+Destination Port, Flow Duration, Total Fwd Packets, Total Backward Packets,Total Length of Fwd Packets, Total Length of Bwd Packets, Flow Packets/s, Label
+443,1200,8,7,940,3210,12.5,BENIGN
+22,180,25,1,1800,85,144.4,SSH-Patator
+80,3500,50,40,4500,3200,25.7,DoS Hulk
+80,45,4,0,240,0,88.8,PortScan
+80,820,12,10,1200,980,26.8,DDoS
+80,150,6,4,500,400,66.7,Web Attack – Brute Force
+99999,30,1,0,20,0,33.3,BENIGN
+53,NaN,2,1,120,80,15.0,BENIGN
+80,100,2,2,Infinity,50,40.0,BENIGN
+443,-50,1,1,20,20,40.0,BENIGN

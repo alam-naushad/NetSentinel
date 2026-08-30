@@ -1,0 +1,53 @@
+{
+  "protocol_a_contamination": {
+    "split_sizes": {
+      "train": 1979432,
+      "val": 424164,
+      "test": 424165
+    },
+    "within_split_duplicates": {
+      "train_exact_feature_duplicates": 206785,
+      "train_feature_and_label_duplicates": 206364,
+      "train_internal_cross_label_collisions": 421,
+      "train_unique_feature_vectors": 1772647,
+      "val_exact_feature_duplicates": 25820,
+      "val_feature_and_label_duplicates": 25782,
+      "val_internal_cross_label_collisions": 38,
+      "val_unique_feature_vectors": 398344,
+      "test_exact_feature_duplicates": 25583,
+      "test_feature_and_label_duplicates": 25544,
+      "test_internal_cross_label_collisions": 39,
+      "test_unique_feature_vectors": 398582
+    },
+    "cross_boundary_feature_sharing": {
+      "train_val_shared_unique_vectors": 34720,
+      "train_test_shared_unique_vectors": 34771,
+      "val_test_shared_unique_vectors": 14876
+    },
+    "cross_boundary_cross_label_collisions": {
+      "train_val_cross_label_collision_vectors": 423,
+      "train_test_cross_label_collision_vectors": 414,
+      "val_test_cross_label_collision_vectors": 87
+    }
+  },
+  "protocol_b_contamination": {
+    "split_sizes": {
+      "train_mon_wed": 1666479,
+      "test_thu_fri": 1161282
+    },
+    "within_split_duplicates": {
+      "train_duplicates": 155726,
+      "train_feature_and_label_duplicates": 155629,
+      "train_internal_cross_label_collisions": 97,
+      "train_unique_vectors": 1510753,
+      "test_duplicates": 144035,
+      "test_feature_and_label_duplicates": 143468,
+      "test_internal_cross_label_collisions": 567,
+      "test_unique_vectors": 1017247
+    },
+    "cross_capture_sharing": {
+      "cross_capture_shared_unique_vectors": 30845,
+      "cross_capture_cross_label_collision_vectors": 706
+    }
+  }
+}

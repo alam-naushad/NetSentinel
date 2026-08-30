@@ -1,0 +1,136 @@
+{
+  "protocol": "Protocol B (Day / Capture-Aware Cross-Evaluation)",
+  "train_files": [
+    "Monday-WorkingHours.pcap_ISCX.csv",
+    "Tuesday-WorkingHours.pcap_ISCX.csv",
+    "Wednesday-workingHours.pcap_ISCX.csv"
+  ],
+  "test_files": [
+    "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
+    "Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
+    "Friday-WorkingHours-Morning.pcap_ISCX.csv",
+    "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv",
+    "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv"
+  ],
+  "train_rows": 1666479,
+  "test_rows": 1161282,
+  "feature_duplicate_summary": {
+    "train_duplicate_rows": 155726,
+    "test_duplicate_rows": 144035,
+    "unique_train_flows": 1510753,
+    "unique_test_flows": 1017247
+  },
+  "class_distribution": {
+    "BENIGN": {
+      "total": 2271205,
+      "train": 1400924,
+      "test": 870281,
+      "train_presence": "Present",
+      "test_presence": "Present"
+    },
+    "Bot": {
+      "total": 1956,
+      "train": 0,
+      "test": 1956,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    },
+    "DDoS": {
+      "total": 128025,
+      "train": 0,
+      "test": 128025,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    },
+    "DoS GoldenEye": {
+      "total": 10293,
+      "train": 10293,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "DoS Hulk": {
+      "total": 230124,
+      "train": 230124,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "DoS Slowhttptest": {
+      "total": 5499,
+      "train": 5499,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "DoS slowloris": {
+      "total": 5796,
+      "train": 5796,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "FTP-Patator": {
+      "total": 7935,
+      "train": 7935,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "Heartbleed": {
+      "total": 11,
+      "train": 11,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "Infiltration": {
+      "total": 36,
+      "train": 0,
+      "test": 36,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    },
+    "PortScan": {
+      "total": 158804,
+      "train": 0,
+      "test": 158804,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    },
+    "SSH-Patator": {
+      "total": 5897,
+      "train": 5897,
+      "test": 0,
+      "train_presence": "Present",
+      "test_presence": "Absent in Test"
+    },
+    "Web Attack  Brute Force": {
+      "total": 1507,
+      "train": 0,
+      "test": 1507,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    },
+    "Web Attack  Sql Injection": {
+      "total": 21,
+      "train": 0,
+      "test": 21,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    },
+    "Web Attack  XSS": {
+      "total": 652,
+      "train": 0,
+      "test": 652,
+      "train_presence": "Unseen / Novel in Test",
+      "test_presence": "Present"
+    }
+  },
+  "methodological_notes": [
+    "Protocol B measures cross-capture generalization and zero-shot novel attack detection.",
+    "Attacks present in Train (FTP-Patator, SSH-Patator, DoS variants, Heartbleed) are absent in Test captures.",
+    "Attacks present in Test (Web Attacks, Infiltration, Bot, PortScan, DDoS) were never seen during Training.",
+    "Metrics from Protocol A and Protocol B must NEVER be merged into a single leaderboard."
+  ]
+}
