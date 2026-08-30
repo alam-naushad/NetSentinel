@@ -3,6 +3,7 @@ import {
   ShieldAlert,
   Sliders,
   Layers,
+  FileCode2,
   Cpu,
   BarChart3,
   Terminal,
@@ -10,7 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-export type TabId = 'overview' | 'single' | 'batch' | 'models' | 'analytics';
+export type TabId = 'overview' | 'single' | 'batch' | 'pcap' | 'models' | 'analytics';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -22,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
     { id: 'overview' as TabId, label: 'Security Overview', icon: <ShieldAlert className="w-4 h-4" />, badge: null },
     { id: 'single' as TabId, label: 'Single-Flow Analysis', icon: <Sliders className="w-4 h-4" />, badge: 'Live' },
     { id: 'batch' as TabId, label: 'Batch Flow Analysis', icon: <Layers className="w-4 h-4" />, badge: '5k Max' },
+    { id: 'pcap' as TabId, label: 'PCAP File Analysis', icon: <FileCode2 className="w-4 h-4" />, badge: '10k Max' },
     { id: 'models' as TabId, label: 'Model Registry', icon: <Cpu className="w-4 h-4" />, badge: '16' },
     { id: 'analytics' as TabId, label: 'Session Analytics', icon: <BarChart3 className="w-4 h-4" />, badge: null },
   ];

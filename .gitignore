@@ -14,10 +14,13 @@ data/raw/*
 data/extracted/*
 data/processed/*
 data/models/*
+data/samples/*
 !data/raw/.gitkeep
 !data/extracted/.gitkeep
 !data/processed/.gitkeep
 !data/models/.gitkeep
+!data/samples/.gitkeep
+scratch*.html
 
 # ML Model binary artifacts
 artifacts/models/*

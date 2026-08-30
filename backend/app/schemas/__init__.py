@@ -11,6 +11,13 @@ from app.schemas.inference import (
     FlowPredictionResponse,
 )
 from app.schemas.models import ModelCatalogResponse, ModelMetadataResponse
+from app.schemas.pcap import (
+    PcapAnalysisResponse,
+    PcapAnalysisSummary,
+    PcapFlowDetailResult,
+    PcapFlowProvenanceResponse,
+    PcapFlowResult,
+)
 
 __all__ = [
     "DecisionPreviewRequest",
@@ -25,4 +32,9 @@ __all__ = [
     "EvaluateFlowResponse",
     "ModelMetadataResponse",
     "ModelCatalogResponse",
+    "PcapAnalysisResponse",
+    "PcapAnalysisSummary",
+    "PcapFlowDetailResult",
+    "PcapFlowProvenanceResponse",
+    "PcapFlowResult",
 ]

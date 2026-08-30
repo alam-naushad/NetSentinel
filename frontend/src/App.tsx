@@ -7,6 +7,7 @@ import { SingleFlowView } from './components/singleFlow/SingleFlowView';
 import { BatchView } from './components/batch/BatchView';
 import { ModelsView } from './components/models/ModelsView';
 import { AnalyticsView } from './components/analytics/AnalyticsView';
+import { PcapAnalysisView } from './components/pcap/PcapAnalysisView';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
@@ -17,6 +18,7 @@ export function App() {
         {activeTab === 'overview' && <OverviewView onNavigateTab={setActiveTab} />}
         {activeTab === 'single' && <SingleFlowView />}
         {activeTab === 'batch' && <BatchView />}
+        {activeTab === 'pcap' && <PcapAnalysisView />}
         {activeTab === 'models' && <ModelsView />}
         {activeTab === 'analytics' && <AnalyticsView />}
       </Layout>

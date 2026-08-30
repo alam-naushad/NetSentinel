@@ -14,6 +14,7 @@ from app.api.routes_decisions import router as decisions_router
 from app.api.routes_health import router as health_router
 from app.api.routes_inference import router as inference_router
 from app.api.routes_models import router as models_router
+from app.api.routes_pcap import router as pcap_router
 from app.services.model_registry import get_model_registry
 from app.services.preprocessor import FeatureValidationError
 
@@ -83,4 +84,5 @@ app.include_router(health_router, prefix="/api/v1")
 app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(inference_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
+app.include_router(pcap_router, prefix="/api/v1")
 
