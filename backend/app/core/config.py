@@ -73,5 +73,19 @@ class Settings(BaseSettings):
         description="Retention period in days for raw JSONB 48-feature vectors before archival",
     )
 
+    # Zeek Ingestion configuration
+    ZEEK_MAX_UPLOAD_SIZE_MB: int = Field(
+        default=50,
+        ge=1,
+        le=500,
+        description="Maximum file upload size for Zeek log files in MB",
+    )
+    ZEEK_MAX_CONNECTIONS: int = Field(
+        default=100_000,
+        ge=1,
+        le=1_000_000,
+        description="Maximum number of connections to parse from a single Zeek log file",
+    )
+
 
 settings = Settings()

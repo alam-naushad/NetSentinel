@@ -1,0 +1,5 @@
+{"ts":1525879832.01624,"uid":"CHhAvVGS1DHF508n6","id.orig_h":"192.168.100.103","id.orig_p":137,"id.resp_h":"192.168.100.255","id.resp_p":137,"proto":"udp"}
+this is not valid json
+{"uid":"only_uid","id.orig_h":"10.0.0.1"}
+{"ts":1525879832.0,"uid":"NoPorts","id.orig_h":"192.168.1.1","id.orig_p":"not_a_port","id.resp_h":"192.168.1.2","id.resp_p":80,"proto":"tcp"}
+{"ts":1525879833.01624,"uid":"C1111111111111111","id.orig_h":"192.168.100.103","id.orig_p":80,"id.resp_h":"10.0.0.1","id.resp_p":4567,"proto":"tcp"}

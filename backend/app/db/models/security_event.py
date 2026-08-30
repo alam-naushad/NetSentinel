@@ -52,17 +52,21 @@ class SecurityEvent(Base, TimestampMixin):
     )  # PCAP_BATCH, REST_EVAL, LIVE_ZEEK
 
     # Primary relational detection attributes (used for all indexing and range filtering)
-    predicted_family: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
-    class_confidence: Mapped[float] = mapped_column(Float, nullable=False)
-    normalized_anomaly_score: Mapped[float] = mapped_column(Float, nullable=False)
+    predicted_family: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    class_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    normalized_anomaly_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     is_statistical_anomaly: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
-    risk_score: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
-    severity: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # LOW, MEDIUM, HIGH, CRITICAL
-    triage_status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)  # NORMAL, UNKNOWN_ANOMALY, KNOWN_ATTACK
+    risk_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
+    severity: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)  # LOW, MEDIUM, HIGH, CRITICAL
+    triage_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True, index=True)  # NORMAL, UNKNOWN_ANOMALY, KNOWN_ATTACK
+
+    ml_classification_performed: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, index=True,
+    )
 
     # Complex JSON payload attributes (immutable forensic snapshot, not for primary range queries)
-    class_probabilities: Mapped[Dict[str, float]] = mapped_column(JSON, nullable=False)
-    feature_vector: Mapped[Dict[str, float]] = mapped_column(JSON, nullable=False)
+    class_probabilities: Mapped[Optional[Dict[str, float]]] = mapped_column(JSON, nullable=True)
+    feature_vector: Mapped[Optional[Dict[str, float]]] = mapped_column(JSON, nullable=True)
 
     # Relationships
     job: Mapped[Optional[AnalysisJob]] = relationship("AnalysisJob", back_populates="events")

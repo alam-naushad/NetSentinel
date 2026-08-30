@@ -85,3 +85,78 @@ flowchart TD
 ### Frontend Production Build
 - Ran `tsc -b && vite build` in `frontend/`:
 - **Result:** **Built in 1.06s with 0 errors**.
+
+---
+
+# Stage 8 Implementation Walkthrough: Zeek Native Telemetry Integration
+
+## Overview
+
+Stage 8 integrates native Zeek connection telemetry (`conn.log` in JSON or TSV format) into the platform without running ML inference. The implementation respects the empirical finding that standard Zeek `conn.log` cannot reliably reconstruct the 48 CICFlowMeter features required by the frozen Stage 3 models.
+
+```mermaid
+flowchart TD
+    A["Zeek conn.log (JSON / TSV Upload)"] --> B["ZeekLogParser\n(Format Auto-Detect + Batch Dedup)"]
+    B --> C["ZeekConnectionRecord\n(Strict Validation)"]
+    C --> D["ZeekAnalysisService\n(Telemetry Metrics & Distributions)"]
+    D --> E["TelemetryPersistenceService\n(source_channel='ZEEK_CONN')"]
+    E --> F[("PostgreSQL 16\n(ml_classification_performed=false)")]
+    F --> G["POST /api/v1/zeek/analyze"]
+    G --> H["React SOC Dashboard\n(Zeek Telemetry View — 'Telemetry Only')"]
+```
+
+---
+
+## 1. Key Components Created & Modified
+
+### Backend & Database Layer
+1. **Zeek Models & Parsers** ([`backend/app/services/zeek/`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/services/zeek/)):
+   - `ZeekConnectionRecord`: Validated Pydantic representation with strict field normalization.
+   - `ZeekLogParser`: Automatic format detection (JSON vs TSV), batch-level UID deduplication scoped to `(analysis_job_id, source_channel, zeek_uid)`, malformed record isolation, and `max_connections` bounds enforcement.
+   - `ZeekAnalysisService`: Ingestion orchestrator computing protocol, service, and connection state distributions without invoking ML inference.
+2. **Schema & Persistence Extensions**:
+   - `SecurityEvent`: Added `ml_classification_performed: bool = False`, with ML output columns made nullable (`predicted_family=NULL`, `risk_score=NULL`, `severity=NULL`, etc.).
+   - `FlowProvenance`: Added native Zeek forensic fields (`zeek_uid`, `conn_state`, `history`, `service`, `missed_bytes`, `zeek_metadata`).
+   - `Alembic Migration`: [`0002_zeek_native_telemetry.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/alembic/versions/0002_zeek_native_telemetry.py) providing upgrade/downgrade schema paths.
+   - `TelemetryPersistenceService`: Added `persist_zeek_analysis` creating `AnalysisJob(source_type="ZEEK_CONN")` and mapping events without creating `ModelDecision` or `Alert` records.
+3. **API & Configuration**:
+   - [`POST /api/v1/zeek/analyze`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/api/routes_zeek.py): Multipart upload endpoint with 50 MB file limit, SHA-256 computation, and persistence failure semantics.
+   - [`config.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/config.py): Added `ZEEK_MAX_UPLOAD_SIZE_MB=50` and `ZEEK_MAX_CONNECTIONS=100_000`.
+
+### Frontend React Layer
+1. **Zeek Telemetry View** ([`ZeekAnalysisView.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/components/zeek/ZeekAnalysisView.tsx)):
+   - Prominent info banner: **"Telemetry Only — ML Classification Not Performed"** (zero fabricated scores displayed).
+   - Drag-and-drop file upload zone supporting `.log`, `.json`, and `.tsv`.
+   - Aggregate distribution cards for protocols, top services, and connection states.
+   - Sortable, paginated connection table with network 5-tuple, state, history, and byte/packet counters.
+2. **Navigation & Client**:
+   - Added `zeek` tab to [`Sidebar.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/components/layout/Sidebar.tsx) and [`App.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/App.tsx).
+   - API client in [`zeekApi.ts`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/api/zeekApi.ts) and types in [`zeek.ts`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/types/zeek.ts).
+
+---
+
+## 2. Verification & Validation Results
+
+### Backend Automated Test Suite
+- Ran full test suite across all 98 test cases in `tests/`:
+  - **Regression Tests (82/82 passing)**:
+    - Stage 4 ML Preprocessor & Anomaly Scorer tests $\to$ **PASS**
+    - Stage 4 Model Registry & Predictor tests $\to$ **PASS**
+    - Stage 4 Hybrid Risk Engine tests $\to$ **PASS**
+    - Stage 6A/6B Flow Reconstructor & PCAP Feature Adapter tests $\to$ **PASS**
+    - Stage 6B Authentic PCAP Traffic Inference tests (DDoS, DoS, PortScan) $\to$ **PASS**
+    - Stage 7 Database Persistence, Alert Lifecycle, & Telemetry API tests $\to$ **PASS**
+  - **New Zeek Test Suite (16/16 passing)**:
+    - `tests/test_zeek_log_parser.py` (JSON/TSV parsing, format auto-detection, deduplication, malformed records, limits) $\to$ **PASS (9 tests)**
+    - `tests/test_zeek_analysis_service.py` (Ingestion orchestration, distributions, ORM mapping, zero ML/Alert records created) $\to$ **PASS (2 tests)**
+    - `tests/test_zeek_api.py` (POST /api/v1/zeek/analyze, JSON/TSV upload, 50MB limit, empty/malformed handling) $\to$ **PASS (5 tests)**
+- **Final Result:** **98 / 98 tests passing (100% pass rate, 0 failures)**.
+
+### Database Migration Validation
+- Verified full Alembic migration chain:
+  - `<base> -> 0001_initial_telemetry_schema -> 0002_zeek_native_telemetry (head)`
+  - Full upgrade $\to$ downgrade $\to$ re-upgrade lifecycle verified cleanly on a fresh database.
+
+### Frontend Production Build
+- Ran `tsc -b && vite build` in `frontend/`:
+- **Result:** **Built with 0 errors** (2445 modules transformed).

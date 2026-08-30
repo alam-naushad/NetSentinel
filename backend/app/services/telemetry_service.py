@@ -19,6 +19,8 @@ from app.db.models.model_decision import ModelDecision
 from app.db.models.security_event import SecurityEvent
 from app.services.alert_service import AlertService
 from app.services.pcap_analysis_service import AnalyzedFlow, PcapAnalysisResult
+from app.services.zeek.zeek_analysis_service import ZeekAnalysisResult
+from app.services.zeek.zeek_connection_record import ZeekConnectionRecord
 
 logger = logging.getLogger(__name__)
 
@@ -133,4 +135,113 @@ class TelemetryPersistenceService:
         if alert:
             event.alert = alert
 
+        return event
+
+    async def persist_zeek_analysis(
+        self,
+        result: ZeekAnalysisResult,
+        filename: str,
+        file_size_bytes: int,
+        file_sha256: Optional[str] = None,
+        source_channel: str = "ZEEK_CONN",
+    ) -> AnalysisJob:
+        """Persist native Zeek connection telemetry into PostgreSQL.
+        
+        Explicit Failure Semantics:
+        - If database operations fail and DATABASE_REQUIRED=True, the exception is raised.
+        - If DATABASE_REQUIRED=False, errors are logged and handled without altering telemetry.
+        """
+        # 1. Create AnalysisJob
+        job = AnalysisJob(
+            source_type=source_channel,
+            filename=filename,
+            file_size_bytes=file_size_bytes,
+            file_sha256=file_sha256,
+            total_flows_extracted=result.parse_result.total_lines_read,
+            total_flows_analyzed=len(result.raw_records),
+            anomalies_flagged=0,
+            processing_time_ms=result.summary.processing_time_ms,
+            status="COMPLETED",
+        )
+        self.session.add(job)
+        await self.session.flush()
+
+        # 2. Build SecurityEvents and FlowProvenance (NO ModelDecision, NO Alert)
+        events_to_add: List[SecurityEvent] = []
+
+        for rec in result.raw_records:
+            event = self._map_zeek_record_to_event(rec, job_id=job.id, source_channel=source_channel)
+            events_to_add.append(event)
+
+        self.session.add_all(events_to_add)
+        await self.session.flush()
+
+        logger.info(
+            "Persisted Zeek AnalysisJob %s with %d native telemetry events into PostgreSQL.",
+            job.id,
+            len(events_to_add),
+        )
+        return job
+
+    def _map_zeek_record_to_event(
+        self,
+        rec: ZeekConnectionRecord,
+        job_id: Optional[uuid.UUID] = None,
+        source_channel: str = "ZEEK_CONN",
+    ) -> SecurityEvent:
+        """Convert a single ZeekConnectionRecord into a SecurityEvent ORM entity."""
+        event_dt = datetime.fromtimestamp(rec.ts, tz=timezone.utc)
+        duration_sec = rec.duration if rec.duration is not None else 0.0
+        end_dt = datetime.fromtimestamp(rec.ts + duration_sec, tz=timezone.utc)
+        duration_ms = round(duration_sec * 1000.0, 3)
+
+        proto_str = rec.proto.upper()
+        ip_proto = 6 if rec.proto.lower() == "tcp" else 17 if rec.proto.lower() == "udp" else 1
+        flow_id = f"{proto_str}_{rec.id_orig_h}_{rec.id_orig_p}_{rec.id_resp_h}_{rec.id_resp_p}_{int(rec.ts * 1_000_000)}"
+
+        event = SecurityEvent(
+            job_id=job_id,
+            event_timestamp=event_dt,
+            source_channel=source_channel,
+            ml_classification_performed=False,
+            predicted_family=None,
+            class_confidence=None,
+            normalized_anomaly_score=None,
+            is_statistical_anomaly=False,
+            risk_score=None,
+            severity=None,
+            triage_status=None,
+            class_probabilities=None,
+            feature_vector=None,
+        )
+
+        event.provenance = FlowProvenance(
+            flow_id=flow_id,
+            src_ip=rec.id_orig_h,
+            dst_ip=rec.id_resp_h,
+            src_port=rec.id_orig_p,
+            dst_port=rec.id_resp_p,
+            ip_proto=ip_proto,
+            protocol_name=proto_str,
+            start_time=event_dt,
+            end_time=end_dt,
+            duration_ms=duration_ms,
+            total_packets=(rec.orig_pkts or 0) + (rec.resp_pkts or 0),
+            total_bytes=(rec.orig_bytes or 0) + (rec.resp_bytes or 0),
+            zeek_uid=rec.uid,
+            conn_state=rec.conn_state,
+            history=rec.history,
+            service=rec.service,
+            missed_bytes=rec.missed_bytes,
+            zeek_metadata={
+                "local_orig": rec.local_orig,
+                "local_resp": rec.local_resp,
+                "orig_ip_bytes": rec.orig_ip_bytes,
+                "resp_ip_bytes": rec.resp_ip_bytes,
+                "tunnel_parents": rec.tunnel_parents,
+            },
+        )
+
+        # Do NOT create ModelDecision (no ML)
+        # Do NOT create Alert (no attack)
         return event

@@ -28,13 +28,14 @@ class SecurityEventSummary(BaseModel):
     id: uuid.UUID
     event_timestamp: datetime
     source_channel: str
-    predicted_family: str
-    class_confidence: float
-    normalized_anomaly_score: float
+    ml_classification_performed: bool = True
+    predicted_family: Optional[str] = None
+    class_confidence: Optional[float] = None
+    normalized_anomaly_score: Optional[float] = None
     is_statistical_anomaly: bool
-    risk_score: int
-    severity: str
-    triage_status: str
+    risk_score: Optional[int] = None
+    severity: Optional[str] = None
+    triage_status: Optional[str] = None
     src_ip: str
     dst_ip: str
     src_port: int
@@ -49,20 +50,21 @@ class SecurityEventDetail(BaseModel):
     id: uuid.UUID
     event_timestamp: datetime
     source_channel: str
-    predicted_family: str
-    class_confidence: float
-    class_probabilities: dict[str, float]
-    normalized_anomaly_score: float
-    raw_decision_score: float
+    ml_classification_performed: bool = True
+    predicted_family: Optional[str] = None
+    class_confidence: Optional[float] = None
+    class_probabilities: Optional[dict[str, float]] = None
+    normalized_anomaly_score: Optional[float] = None
+    raw_decision_score: Optional[float] = None
     is_statistical_anomaly: bool
-    risk_score: int
-    severity: str
-    triage_status: str
-    explanation: str
-    supervised_model_key: str
-    anomaly_model_key: str
+    risk_score: Optional[int] = None
+    severity: Optional[str] = None
+    triage_status: Optional[str] = None
+    explanation: Optional[str] = None
+    supervised_model_key: Optional[str] = None
+    anomaly_model_key: Optional[str] = None
     provenance: PcapFlowProvenanceResponse
-    feature_vector: dict[str, float]
+    feature_vector: Optional[dict[str, float]] = None
     alert_id: Optional[uuid.UUID] = None
     job_id: Optional[uuid.UUID] = None
 

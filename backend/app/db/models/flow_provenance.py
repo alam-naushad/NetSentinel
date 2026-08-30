@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
-from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Integer, String
+from typing import TYPE_CHECKING, Optional, Dict, Any
+from sqlalchemy import BigInteger, DateTime, Float, ForeignKey, Integer, String, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, GUID, TimestampMixin
@@ -48,5 +48,12 @@ class FlowProvenance(Base, TimestampMixin):
     duration_ms: Mapped[float] = mapped_column(Float, nullable=False)
     total_packets: Mapped[int] = mapped_column(Integer, nullable=False)
     total_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
+    zeek_uid: Mapped[Optional[str]] = mapped_column(String(24), nullable=True, index=True)
+    conn_state: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    history: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    service: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    missed_bytes: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    zeek_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
 
     event: Mapped[SecurityEvent] = relationship("SecurityEvent", back_populates="provenance")

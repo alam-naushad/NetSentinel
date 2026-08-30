@@ -9,9 +9,10 @@ import {
   Terminal,
   Database,
   ExternalLink,
+  Radio,
 } from 'lucide-react';
 
-export type TabId = 'overview' | 'single' | 'batch' | 'pcap' | 'alerts' | 'history' | 'models' | 'analytics';
+export type TabId = 'overview' | 'single' | 'batch' | 'pcap' | 'zeek' | 'alerts' | 'history' | 'models' | 'analytics';
 
 interface SidebarProps {
   activeTab: TabId;
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
     { id: 'single' as TabId, label: 'Single-Flow Analysis', icon: <Sliders className="w-4 h-4" />, badge: 'Live' },
     { id: 'batch' as TabId, label: 'Batch Flow Analysis', icon: <Layers className="w-4 h-4" />, badge: '5k Max' },
     { id: 'pcap' as TabId, label: 'PCAP File Analysis', icon: <FileCode2 className="w-4 h-4" />, badge: '10k Max' },
+    { id: 'zeek' as TabId, label: 'Zeek Telemetry', icon: <Radio className="w-4 h-4 text-emerald-400" />, badge: 'Conn' },
     { id: 'history' as TabId, label: 'Historical Telemetry', icon: <Database className="w-4 h-4 text-purple-400" />, badge: 'Postgres' },
     { id: 'models' as TabId, label: 'Model Registry', icon: <Cpu className="w-4 h-4" />, badge: '16' },
     { id: 'analytics' as TabId, label: 'Session Analytics', icon: <BarChart3 className="w-4 h-4" />, badge: null },
