@@ -1,8 +1,8 @@
-# Stage 7 Implementation Walkthrough: Persistent Security Telemetry & Incident Management
+# Stage 10 Implementation Walkthrough: Hardened Capstone Deployment, Observability & Verification
 
 ## Overview
 
-Stage 7 completes the persistent telemetry and operational incident-management architecture for the capstone platform. It introduces asynchronous PostgreSQL 16 persistence via SQLAlchemy 2.0 and Alembic, separating immutable detection evidence from configurable alert policies and append-only triage audit trails.
+Stage 10 transitions the completed AI Network Anomaly Detection and Intrusion Intelligence Platform into a reproducible, hardened, and observable capstone deployment. It establishes a multi-container Docker Compose architecture, implements defensive security headers and process-local rate limiting, provides guarded health and operational metrics, ensures frozen model artifact integrity verification on startup, packages deterministic demo assets, and validates full platform regression.
 
 ---
 
@@ -10,153 +10,112 @@ Stage 7 completes the persistent telemetry and operational incident-management a
 
 ```mermaid
 flowchart TD
-    A["Raw PCAP Upload (/api/v1/pcap/analyze)"] --> B["Stateful Flow Reconstruction & Feature Extraction"]
-    B --> C["Frozen ML Inference (XGBoost K48 + Isolation Forest K48)"]
-    C --> D["Deterministic Hybrid Risk Engine"]
-    D --> E["TelemetryPersistenceService"]
-    E --> F[("PostgreSQL 16 Database")]
-    F --> G["REST Query APIs (/api/v1/telemetry, /api/v1/alerts)"]
-    G --> H["React SOC Dashboard (Incident Alerts & Historical Telemetry)"]
+    subgraph "Docker Compose Network (soc_net)"
+        NGINX["Frontend / Reverse Proxy<br/>(Nginx 1.25-alpine :80)<br/>Static React SPA + Reverse Proxy"]
+        API["Backend API Service<br/>(FastAPI / Uvicorn :8000)<br/>Python 3.12-slim"]
+        PG["PostgreSQL Database<br/>(postgres:16-alpine :5432)<br/>Persistent Volume: postgres_data"]
+        SPOOL["Shared Spool Volume<br/>(zeek_spool_data : /var/log/zeek)"]
+        MODELS["Bind-Mounted Models<br/>(./artifacts/models : /app/artifacts/models:ro)"]
+    end
+
+    CLIENT["Browser / SOC Analyst Dashboard"] -->|HTTP :80| NGINX
+    NGINX -->|/ -> static files| NGINX
+    NGINX -->|/api/* -> proxy_pass| API
+    NGINX -->|/health -> proxy_pass| API
+    API -->|Async SQLAlchemy / asyncpg| PG
+    API <-->|Tail & Checkpoint| SPOOL
+    MODELS -->|Read-only on startup| API
 ```
 
 ### Invariants Maintained
-- **Stage 3 Models**: Completely frozen (`protocol_a_xgboost_k48.joblib`, `protocol_a_isolationforest_k48.joblib`, etc.). Zero retraining or feature modification.
-- **Stage 4 Inference**: Unaltered feature transformation and risk calculation logic.
-- **Stage 5 Dashboard**: In-memory session analytics preserved alongside persistent historical views.
-- **Stage 6A/6B PCAP Pipeline**: 617-flow validation evidence and packet parsing logic intact.
-- **Persistence Failure Semantics**:
-  - `DATABASE_REQUIRED=true` $\to$ Startup fails fast if PostgreSQL is unavailable; operations return HTTP 500.
-  - `DATABASE_REQUIRED=false` $\to$ Runs in explicit ephemeral mode; ML inference proceeds and returns structured results marked `persisted: false`.
+- **Frozen Models**: Stage 3 supervised (`protocol_a_xgboost_k48`) and unsupervised (`protocol_a_isolationforest_k48`) model weights, scalers, calibrated decision threshold ($\alpha=0.01, \theta=0.051838$), feature ordering ($K=48$), attack taxonomy, and inference semantics are completely unchanged.
+- **Fail-Fast Model Verification**: On startup, the backend verifies that required model binaries exist and match their expected SHA-256 checksums before serving traffic. Missing or mismatched artifacts trigger an immediate fatal startup error.
+- **PCAP Default Limit Preserved**: Default PCAP upload limit is preserved at **50 MB** (`PCAP_MAX_UPLOAD_SIZE_MB=50`).
+- **Stage 9A Compatibility Verdict**: Zeek ML feature parity remains permanently **FAILED** and frozen as a research result. No Zeek telemetry is routed to ML models.
+- **Stage 8 / 9B Zeek Native Telemetry**: Batch upload and real-time SSE stream remain strictly `source_channel="ZEEK_CONN"`, `ml_classification_performed=false`, with null ML/risk fields.
+- **No Unnecessary Infrastructure**: No Kafka or Redis brokers; in-process bounded queues and asyncio event distribution are hardened and preserved.
 
 ---
 
-## 2. Key Components Created
+## 2. Key Components Created & Modified
 
-### Backend & Database Layer
-1. **Pydantic Settings** ([`config.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/config.py)):
-   - Configurable alert thresholds: `ALERT_RISK_THRESHOLD=65`, `ALERT_CONFIDENCE_THRESHOLD=0.80`, `ALERT_ON_UNKNOWN_ANOMALY=True`.
-   - Persistence settings: `DATABASE_URL`, `DATABASE_REQUIRED`, `FEATURE_VECTOR_RETENTION_DAYS=90`.
-2. **Async Database Engine & Lifecycle** ([`database.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/database.py)):
-   - Connection pool management (`asyncpg` for PostgreSQL, `aiosqlite` for tests).
-   - `/api/v1/health` reports persistence connectivity status, database dialect, and operational mode.
-3. **Relational Schema Entities** ([`backend/app/db/models/`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/db/models/)):
-   - `AnalysisJob`: Ingestion run metadata and KPIs.
-   - `SecurityEvent`: Immutable detection record with relational query columns and full 48-feature `JSONB` vector.
-   - `FlowProvenance`: Network 5-tuple and packet/byte counters.
-   - `ModelDecision`: Model keys, raw decision scores, and triage rationale.
-   - `Alert`: Operational incident state.
-   - `AlertHistory`: Append-only audit record of every disposition update (`OPEN` $\to$ `INVESTIGATING` $\to$ `RESOLVED` / `FALSE_POSITIVE`).
-4. **Alembic Migration** ([`0001_initial_telemetry_schema.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/alembic/versions/0001_initial_telemetry_schema.py)):
-   - Full DDL schema creation and composite indexes (`ix_events_lookup`, `ix_events_threat`).
-5. **Data Access Repositories & Services**:
-   - [`event_repository.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/db/repositories/event_repository.py): Subnet CIDR filtering, parameterized search, multi-column sorting, pagination, and KPI aggregation.
-   - [`alert_repository.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/db/repositories/alert_repository.py): State transition updates with atomic audit trail appending.
-   - [`alert_service.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/services/alert_service.py): Configurable alert escalation policy engine.
-   - [`telemetry_service.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/services/telemetry_service.py): Bulk batch persistence orchestrator.
-6. **FastAPI Endpoints**:
-   - `/api/v1/telemetry/events`, `/api/v1/telemetry/events/{id}`
-   - `/api/v1/telemetry/jobs`, `/api/v1/telemetry/jobs/{id}`
-   - `/api/v1/telemetry/stats/summary`
-   - `/api/v1/alerts`, `PATCH /api/v1/alerts/{id}`
+### Security & Middleware Hardening (Workstream A)
+1. **Security Headers Middleware** ([`security.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/security.py)):
+   - Applies `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and strict `Content-Security-Policy`.
+   - `Strict-Transport-Security` is **strictly conditional** on `ENABLE_HTTPS=true` and disabled for local HTTP.
+2. **In-Memory Rate Limiter** ([`security.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/security.py)):
+   - Process-local sliding-window rate limiter on `/api/v1/inference/*` (60 req/min) and `/api/v1/pcap/analyze` / `/api/v1/zeek/analyze` (20 req/min).
+   - Documented process-local lifetime and reset-on-restart semantics.
+3. **CORS Hardening**:
+   - `CORS_ORIGINS` environment setting parsed into allowed origin lists rather than wildcard in production.
 
-### Frontend React Layer
-1. **API Clients & Types** ([`telemetryApi.ts`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/api/telemetryApi.ts), [`alertsApi.ts`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/api/alertsApi.ts)): Full TypeScript definitions for telemetry, alerts, and audit records.
-2. **Incident Alerts View** ([`AlertsView.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/components/alerts/AlertsView.tsx)):
-   - SOC triage queue with disposition/severity filters.
-   - Interactive disposition transition modal with analyst identity and notes.
-   - Append-only lifecycle audit drawer showing all previous transitions.
-3. **Historical Telemetry Explorer** ([`HistoricalEventsView.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/components/history/HistoricalEventsView.tsx)):
-   - Multi-parameter filter bar (time windows: 1h, 24h, 7d, 30d, all; CIDR search, attack family, severity).
-   - Forensic 48-feature drill-down modal inspection.
+### Observability & Diagnostics (Workstream D)
+1. **Structured Logging** ([`logging_config.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/logging_config.py)):
+   - Switchable between colorized console logging and structured single-line JSON (`LOG_FORMAT=json`).
+2. **Health Probes** ([`routes_health.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/api/routes_health.py)):
+   - Minimal liveness probe: `GET /health/live` $\to$ `{"status": "ok", "service": "network-anomaly-api"}`.
+   - Guarded readiness probe: `GET /health/ready` $\to$ checks DB connectivity and model registry availability without leaking internal credentials or stack traces.
+3. **Operational Metrics Endpoint** ([`routes_metrics.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/api/routes_metrics.py)):
+   - Exposes platform metrics: uptime, database connection status, active model count in RAM, connected SSE clients, and Zeek queue depth/lag.
+
+### Containerization & Deployment (Workstream B)
+1. **`Dockerfile.backend`**: Multi-stage `python:3.12-slim` image with non-root `appuser`, automated migration execution on startup, and healthcheck.
+2. **`Dockerfile.frontend`** & **`frontend/nginx.conf`**: Multi-stage Vite build $\to$ `nginx:1.25-alpine` runtime with reverse proxy, SSE unbuffered streaming options, and security headers.
+3. **`docker-compose.prod.yml`**: Full multi-container composition orchestrating PostgreSQL, FastAPI Backend (with read-only model bind-mount and shared spool volume), and Nginx Frontend.
+4. **`.env.example`**: Complete annotated configuration template.
+
+### Demo Packaging & Sample Curation (Workstream G)
+1. **`data/demo/`**: Small, deterministic, provenance-documented demo files derived strictly from existing validated fixtures and samples:
+   - `demo_benign_flow.json`: Normal HTTPS web session (48 features).
+   - `demo_ddos_loic.pcap`: Curated 60-packet slice of LOIC DDoS attack.
+   - `demo_portscan_nmap.pcap`: Curated 60-packet slice of Nmap SYN scan.
+   - `demo_zeek_conn.log`: Curated 15-record Zeek connection log.
+   - `data/demo/README.md`: Provenance documentation with explicit note that demo assets are never automatically ingested on startup.
+2. **`scripts/demo_walkthrough.py`**: Automated interactive CLI script executing end-to-end evaluation across health, models, single-flow AI, PCAP attack detection, Zeek ingestion, and metrics.
+3. **`scripts/test_backup_restore.py`**: Automated PostgreSQL backup and restore smoke test script.
+
+### Documentation Suite (Workstream F)
+1. **[`README.md`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/README.md)**: Overhauled with architecture diagrams, quickstarts, Stage 3 scorecards, and demo walkthrough instructions.
+2. **[`docs/deployment_guide.md`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/docs/deployment_guide.md)**: Containerized deployment, model provisioning, and backup/restore guide.
+3. **[`docs/security_model.md`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/docs/security_model.md)**: Threat model, security headers, rate limiting, and model integrity.
+4. **[`docs/operations_runbook.md`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/docs/operations_runbook.md)**: Operational troubleshooting and maintenance runbooks.
+5. **[`docs/capstone_presentation_guide.md`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/docs/capstone_presentation_guide.md)**: Capstone evaluation guide, verified benchmarks, and supported vs prohibited scientific claims.
 
 ---
 
 ## 3. Verification & Validation Results
 
 ### Backend Automated Test Suite
-- Ran full test suite across all 82 test cases in `tests/`:
-  - `tests/test_db_models.py` (ORM relationships, foreign keys, cascades, GUIDs, JSON fields) $\to$ **PASS**
-  - `tests/test_alert_service.py` (Configurable alert rules and thresholds) $\to$ **PASS**
-  - `tests/test_telemetry_api.py` (REST endpoints, pagination, CIDR filtering, PATCH disposition) $\to$ **PASS**
-  - `tests/test_pcap_persistence.py` (PCAP upload $\to$ PostgreSQL persistence) $\to$ **PASS**
-  - All Stage 4, Stage 5, and Stage 6A/6B regression tests $\to$ **PASS**
-- **Result:** **82 / 82 tests passing (100% pass rate)** in 23.16s.
+- Executed full test suite across all test files (`python -m unittest discover -s tests -p "test_*.py"`):
+  - **Regression Tests (125/125 passing)**:
+    - Stages 1–7 ML Preprocessor, Model Registry, Predictor, Risk Engine, PCAP Reconstructor, Database Persistence, and Telemetry APIs $\to$ **PASS**
+    - Stage 8 Zeek Native Telemetry Upload & Parsers $\to$ **PASS**
+    - Stage 9A Zeek ML Compatibility Failure Research Tests $\to$ **PASS**
+    - Stage 9B Spool Tailer, EventBroadcaster, IngestionWorker, and SSE Streaming APIs $\to$ **PASS**
+  - **New Stage 10 Test Suite (10/10 passing)**:
+    - `tests/test_security_hardening.py` (Security headers, conditional HSTS, in-memory rate limiting, model checksum verification, CORS parser) $\to$ **PASS (6 tests)**
+    - `tests/test_observability.py` (Minimal /health/live, guarded /health/ready, /api/v1/metrics, JSONLogFormatter) $\to$ **PASS (4 tests)**
+- **Final Result:** **135 / 135 tests passing (100% pass rate, 0 failures)** in 34.53s.
 
 ### Frontend Production Build
-- Ran `tsc -b && vite build` in `frontend/`:
-- **Result:** **Built in 1.06s with 0 errors**.
+- Executed `npm run build` in `frontend/`:
+  - **Result:** **Built cleanly in 1.14s with 0 errors** (2,450 modules transformed).
 
----
+### PostgreSQL Backup & Restore Verification Audit
+- Executed `python scripts/test_backup_restore.py`:
+  - **Schema & Model Definitions:** Validated 7 relational ORM tables and backup script structure.
+  - **Live Database Round-Trip (`pg_dump → drop → pg_restore`):** **UNVERIFIED** (host environment lacks local `pg_dump` binary and Docker daemon).
 
-# Stage 8 Implementation Walkthrough: Zeek Native Telemetry Integration
+### Containerized Docker Smoke Test Audit
+- **Status:** **UNVERIFIED** (host environment lacks Docker Engine / CLI).
 
-## Overview
+### End-to-End Demo Walkthrough Smoke Test
+- Executed all 7 walkthrough steps programmatically against the platform:
+  - Step 1: Health Probes (`/health/live`, `/health/ready`) $\to$ **PASS**
+  - Step 2: Model Catalog Checksum Verification (`/api/v1/models`) $\to$ **PASS**
+  - Step 3: Single-Flow AI Evaluation (Benign HTTPS Session) $\to$ **PASS (Predicted: BENIGN, Status: NORMAL, Risk: 0-15)**
+  - Step 4: PCAP Attack Detection (LOIC DDoS) $\to$ **PASS (Flows Extracted: 1, Analyzed: 1)**
+  - Step 5: PCAP Attack Detection (Nmap PortScan) $\to$ **PASS (Flows Extracted: 17, Analyzed: 17)**
+  - Step 6: Zeek Telemetry Ingestion (conn.log) $\to$ **PASS (Connections: 15, Invariant: TELEMETRY_ONLY)**
+  - Step 7: System Metrics Telemetry (`/api/v1/metrics`) $\to$ **PASS (Status: healthy, Models Loaded: 16)**
 
-Stage 8 integrates native Zeek connection telemetry (`conn.log` in JSON or TSV format) into the platform without running ML inference. The implementation respects the empirical finding that standard Zeek `conn.log` cannot reliably reconstruct the 48 CICFlowMeter features required by the frozen Stage 3 models.
-
-```mermaid
-flowchart TD
-    A["Zeek conn.log (JSON / TSV Upload)"] --> B["ZeekLogParser\n(Format Auto-Detect + Batch Dedup)"]
-    B --> C["ZeekConnectionRecord\n(Strict Validation)"]
-    C --> D["ZeekAnalysisService\n(Telemetry Metrics & Distributions)"]
-    D --> E["TelemetryPersistenceService\n(source_channel='ZEEK_CONN')"]
-    E --> F[("PostgreSQL 16\n(ml_classification_performed=false)")]
-    F --> G["POST /api/v1/zeek/analyze"]
-    G --> H["React SOC Dashboard\n(Zeek Telemetry View — 'Telemetry Only')"]
-```
-
----
-
-## 1. Key Components Created & Modified
-
-### Backend & Database Layer
-1. **Zeek Models & Parsers** ([`backend/app/services/zeek/`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/services/zeek/)):
-   - `ZeekConnectionRecord`: Validated Pydantic representation with strict field normalization.
-   - `ZeekLogParser`: Automatic format detection (JSON vs TSV), batch-level UID deduplication scoped to `(analysis_job_id, source_channel, zeek_uid)`, malformed record isolation, and `max_connections` bounds enforcement.
-   - `ZeekAnalysisService`: Ingestion orchestrator computing protocol, service, and connection state distributions without invoking ML inference.
-2. **Schema & Persistence Extensions**:
-   - `SecurityEvent`: Added `ml_classification_performed: bool = False`, with ML output columns made nullable (`predicted_family=NULL`, `risk_score=NULL`, `severity=NULL`, etc.).
-   - `FlowProvenance`: Added native Zeek forensic fields (`zeek_uid`, `conn_state`, `history`, `service`, `missed_bytes`, `zeek_metadata`).
-   - `Alembic Migration`: [`0002_zeek_native_telemetry.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/alembic/versions/0002_zeek_native_telemetry.py) providing upgrade/downgrade schema paths.
-   - `TelemetryPersistenceService`: Added `persist_zeek_analysis` creating `AnalysisJob(source_type="ZEEK_CONN")` and mapping events without creating `ModelDecision` or `Alert` records.
-3. **API & Configuration**:
-   - [`POST /api/v1/zeek/analyze`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/api/routes_zeek.py): Multipart upload endpoint with 50 MB file limit, SHA-256 computation, and persistence failure semantics.
-   - [`config.py`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/backend/app/core/config.py): Added `ZEEK_MAX_UPLOAD_SIZE_MB=50` and `ZEEK_MAX_CONNECTIONS=100_000`.
-
-### Frontend React Layer
-1. **Zeek Telemetry View** ([`ZeekAnalysisView.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/components/zeek/ZeekAnalysisView.tsx)):
-   - Prominent info banner: **"Telemetry Only — ML Classification Not Performed"** (zero fabricated scores displayed).
-   - Drag-and-drop file upload zone supporting `.log`, `.json`, and `.tsv`.
-   - Aggregate distribution cards for protocols, top services, and connection states.
-   - Sortable, paginated connection table with network 5-tuple, state, history, and byte/packet counters.
-2. **Navigation & Client**:
-   - Added `zeek` tab to [`Sidebar.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/components/layout/Sidebar.tsx) and [`App.tsx`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/App.tsx).
-   - API client in [`zeekApi.ts`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/api/zeekApi.ts) and types in [`zeek.ts`](file:///c:/Users/ASUS/Documents/Codex/2026-08-29/i-x20/frontend/src/types/zeek.ts).
-
----
-
-## 2. Verification & Validation Results
-
-### Backend Automated Test Suite
-- Ran full test suite across all 98 test cases in `tests/`:
-  - **Regression Tests (82/82 passing)**:
-    - Stage 4 ML Preprocessor & Anomaly Scorer tests $\to$ **PASS**
-    - Stage 4 Model Registry & Predictor tests $\to$ **PASS**
-    - Stage 4 Hybrid Risk Engine tests $\to$ **PASS**
-    - Stage 6A/6B Flow Reconstructor & PCAP Feature Adapter tests $\to$ **PASS**
-    - Stage 6B Authentic PCAP Traffic Inference tests (DDoS, DoS, PortScan) $\to$ **PASS**
-    - Stage 7 Database Persistence, Alert Lifecycle, & Telemetry API tests $\to$ **PASS**
-  - **New Zeek Test Suite (16/16 passing)**:
-    - `tests/test_zeek_log_parser.py` (JSON/TSV parsing, format auto-detection, deduplication, malformed records, limits) $\to$ **PASS (9 tests)**
-    - `tests/test_zeek_analysis_service.py` (Ingestion orchestration, distributions, ORM mapping, zero ML/Alert records created) $\to$ **PASS (2 tests)**
-    - `tests/test_zeek_api.py` (POST /api/v1/zeek/analyze, JSON/TSV upload, 50MB limit, empty/malformed handling) $\to$ **PASS (5 tests)**
-- **Final Result:** **98 / 98 tests passing (100% pass rate, 0 failures)**.
-
-### Database Migration Validation
-- Verified full Alembic migration chain:
-  - `<base> -> 0001_initial_telemetry_schema -> 0002_zeek_native_telemetry (head)`
-  - Full upgrade $\to$ downgrade $\to$ re-upgrade lifecycle verified cleanly on a fresh database.
-
-### Frontend Production Build
-- Ran `tsc -b && vite build` in `frontend/`:
-- **Result:** **Built with 0 errors** (2445 modules transformed).

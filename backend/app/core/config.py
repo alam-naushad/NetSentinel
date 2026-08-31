@@ -21,11 +21,65 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # API Server configuration
+    # Application identity & version
     APP_NAME: str = "AI Network Anomaly Detection Platform"
     APP_VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = False
+
+    # Environment & Security Configuration (Stage 10 Hardened Capstone Deployment)
+    ENVIRONMENT: str = Field(
+        default="development",
+        description="Deployment mode: 'development', 'staging', 'production'",
+    )
+    CORS_ORIGINS: str = Field(
+        default="http://localhost:5173,http://localhost:80,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:80,http://127.0.0.1:3000",
+        description="Comma-separated allowed CORS origins (use '*' only in explicit local development)",
+    )
+    ENABLE_HTTPS: bool = Field(
+        default=False,
+        description="Whether HTTPS is active (controls Strict-Transport-Security header emission)",
+    )
+    RATE_LIMIT_ENABLED: bool = Field(
+        default=True,
+        description="Whether in-memory process-local rate limiting is enabled",
+    )
+    RATE_LIMIT_INFERENCE_PER_MIN: int = Field(
+        default=60,
+        ge=1,
+        le=10000,
+        description="Maximum inference requests per minute per client IP",
+    )
+    RATE_LIMIT_UPLOAD_PER_MIN: int = Field(
+        default=20,
+        ge=1,
+        le=1000,
+        description="Maximum PCAP and Zeek log upload requests per minute per client IP",
+    )
+    LOG_FORMAT: str = Field(
+        default="console",
+        description="Logging output format: 'console' (human-readable) or 'json' (structured)",
+    )
+    LOG_LEVEL: str = Field(
+        default="INFO",
+        description="Root logging severity level",
+    )
+    API_KEY: str | None = Field(
+        default=None,
+        description="Optional API key for deployment-level request guarding (via X-API-Key header)",
+    )
+    PCAP_MAX_UPLOAD_SIZE_MB: int = Field(
+        default=50,
+        ge=1,
+        le=500,
+        description="Maximum file upload size for PCAP analysis in MB (Stage 6B validated default: 50MB)",
+    )
+    PCAP_MAX_FLOWS: int = Field(
+        default=10_000,
+        ge=1,
+        le=100_000,
+        description="Maximum number of flows to extract and analyze from a single PCAP capture",
+    )
 
     # Database configuration
     # Async connection URL for runtime FastAPI endpoints (asyncpg)

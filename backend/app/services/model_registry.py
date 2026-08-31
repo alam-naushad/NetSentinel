@@ -98,6 +98,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.PRODUCTION_DEFAULT,
+        "expected_sha256": "7d9b78ff493f4ab0588022aeaef35bb02fd328751f52eb02e79ae7c488f50b89",
     },
     "protocol_a_randomforest_k48": {
         "filename": "protocol_a_randomforest_k48.joblib",
@@ -106,6 +107,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.PRODUCTION_ALTERNATIVE,
+        "expected_sha256": "293208aea5217727b08731892e9863729e8ef4ca9e463658c3a6cab58478b8df",
     },
     "protocol_a_logisticregression_k48": {
         "filename": "protocol_a_logisticregression_k48.joblib",
@@ -114,6 +116,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.PRODUCTION_ALTERNATIVE,
+        "expected_sha256": "4df93d13a8433355318e1b39148fdd4b6bf5f7ffee4402522939ee79503a94c8",
     },
     "protocol_a_isolationforest_k48": {
         "filename": "protocol_a_isolationforest_k48.joblib",
@@ -122,6 +125,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.STATISTICAL_ANOMALY_DETECTOR,
         "deployment_tier": DeploymentTier.PRODUCTION_DEFAULT,
+        "expected_sha256": "92cd85d0ece2f5a66df5442046ce9487f14551eaa9ee620d2e106132b880ad30",
     },
     # --- Protocol A Port-Ablated Models (K=47) ---
     "protocol_a_xgboost_k47": {
@@ -131,6 +135,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.PRODUCTION_ALTERNATIVE,
+        "expected_sha256": "f2d014e7e0722168b6290e8ec594da672d53c13a8479565cbaeed8c11c708cf9",
     },
     "protocol_a_randomforest_k47": {
         "filename": "protocol_a_randomforest_k47.joblib",
@@ -139,6 +144,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.PRODUCTION_ALTERNATIVE,
+        "expected_sha256": "0932ef8996a9bd6cba08830fe713b47e445321af93a913bc97e93c26ccd881c3",
     },
     "protocol_a_logisticregression_k47": {
         "filename": "protocol_a_logisticregression_k47.joblib",
@@ -147,6 +153,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.PRODUCTION_ALTERNATIVE,
+        "expected_sha256": "d332d894e042421fd329bcd0244910374acb3cbad900917dfc666f7ac2a55bb4",
     },
     "protocol_a_isolationforest_k47": {
         "filename": "protocol_a_isolationforest_k47.joblib",
@@ -155,6 +162,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.STATISTICAL_ANOMALY_DETECTOR,
         "deployment_tier": DeploymentTier.PRODUCTION_ALTERNATIVE,
+        "expected_sha256": "86557c466cbaf2f9b70579f4f964b69b1e11efefdb7e38fab045586f023081a5",
     },
     # --- Protocol B Cross-Capture Evaluation Models (Research Tier) ---
     "protocol_b_xgboost_k48": {
@@ -164,6 +172,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "875c075e367abdf05652615198ac1f82e5dbb45c7c97feb8992bf7c32cbbae7a",
     },
     "protocol_b_randomforest_k48": {
         "filename": "protocol_b_randomforest_k48.joblib",
@@ -172,6 +181,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "06367c1ed492d361702232b09c62491c77a211cb39dc485275b3252ea68f70fb",
     },
     "protocol_b_logisticregression_k48": {
         "filename": "protocol_b_logisticregression_k48.joblib",
@@ -180,6 +190,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "0d4b5310906d945f9bf3c7fa9c0dd650a8c1229aec823cb6d301e5b6dcbb24d8",
     },
     "protocol_b_isolationforest_k48": {
         "filename": "protocol_b_isolationforest_k48.joblib",
@@ -188,6 +199,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K48",
         "model_role": ModelRole.STATISTICAL_ANOMALY_DETECTOR,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "ad72b189c1447dc4ecdb4f05c8b0bc16ee80ad4e5bcc90bce5d5200d7c4fadb8",
     },
     "protocol_b_xgboost_k47": {
         "filename": "protocol_b_xgboost_k47.joblib",
@@ -196,6 +208,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "c1e24c5af52ac6a27552366200d69c0d0622ec2d4fa62e1885fce1a8708f22b6",
     },
     "protocol_b_randomforest_k47": {
         "filename": "protocol_b_randomforest_k47.joblib",
@@ -204,6 +217,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "7313e5311e6797aa9b085fb491e2b3ded3486dc53fc8a93a64acaea62bec7b4c",
     },
     "protocol_b_logisticregression_k47": {
         "filename": "protocol_b_logisticregression_k47.joblib",
@@ -212,6 +226,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.SUPERVISED_CLASSIFIER,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "cf0558a184a5b7deb872169176dcaececdc6fbdc44b8a19e48b74d207dee802d",
     },
     "protocol_b_isolationforest_k47": {
         "filename": "protocol_b_isolationforest_k47.joblib",
@@ -220,6 +235,7 @@ KNOWN_MODEL_CATALOG: dict[str, dict[str, Any]] = {
         "feature_set": "K47",
         "model_role": ModelRole.STATISTICAL_ANOMALY_DETECTOR,
         "deployment_tier": DeploymentTier.RESEARCH_EVALUATION,
+        "expected_sha256": "61e3ac8e1211bab062720de35e5de0b680a7b0889fde03f030a04117dd1b4eec",
     },
 }
 
@@ -348,6 +364,14 @@ class ModelRegistry:
             )
 
         sha256 = compute_file_sha256(artifact_path)
+        expected_sha = catalog_entry.get("expected_sha256")
+        if expected_sha and sha256.lower() != expected_sha.lower():
+            err_msg = (
+                f"Model integrity check FAILED for '{key}' ({filename})! "
+                f"Expected SHA-256 {expected_sha}, computed {sha256}."
+            )
+            logger.critical(err_msg)
+            raise RuntimeError(err_msg)
 
         return ModelArtifactBundle(
             key=key,
@@ -366,6 +390,37 @@ class ModelRegistry:
             artifact_sha256=sha256,
             metadata=metadata,
         )
+
+    def validate_required_models_exist(self) -> dict[str, str]:
+        """Verify presence and SHA-256 integrity of default production models.
+
+        Returns:
+            dict mapping required model key to verified SHA-256 hash.
+
+        Raises:
+            FileNotFoundError: If a required model artifact is missing.
+            RuntimeError: If a required model artifact fails checksum verification.
+        """
+        required_keys = [DEFAULT_SUPERVISED_MODEL_KEY, DEFAULT_ANOMALY_MODEL_KEY]
+        verified: dict[str, str] = {}
+        for key in required_keys:
+            cat = KNOWN_MODEL_CATALOG[key]
+            path = self._models_dir / cat["filename"]
+            if not path.exists():
+                raise FileNotFoundError(
+                    f"CRITICAL: Required production model artifact '{cat['filename']}' "
+                    f"not found at {path}. Please bind-mount or provision the frozen Stage 3 "
+                    f"model artifacts under artifacts/models/."
+                )
+            actual_sha = compute_file_sha256(path)
+            expected_sha = cat.get("expected_sha256")
+            if expected_sha and actual_sha.lower() != expected_sha.lower():
+                raise RuntimeError(
+                    f"CRITICAL: Model integrity check FAILED for required model '{key}' ({cat['filename']})! "
+                    f"Expected SHA-256 {expected_sha}, got {actual_sha}."
+                )
+            verified[key] = actual_sha
+        return verified
 
 
 # Global singleton instance

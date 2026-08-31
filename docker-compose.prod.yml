@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: soc_telemetry_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-soc_telemetry}
+      POSTGRES_USER: ${POSTGRES_USER:-soc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-soc_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-soc_user} -d ${POSTGRES_DB:-soc_telemetry}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - soc_net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: soc_analytics_backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DATABASE_REQUIRED: "true"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-soc_user}:${POSTGRES_PASSWORD:-soc_password}@postgres:5432/${POSTGRES_DB:-soc_telemetry}
+      DATABASE_SYNC_URL: postgresql+psycopg://${POSTGRES_USER:-soc_user}:${POSTGRES_PASSWORD:-soc_password}@postgres:5432/${POSTGRES_DB:-soc_telemetry}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173}
+      ENABLE_HTTPS: ${ENABLE_HTTPS:-false}
+      RATE_LIMIT_ENABLED: "true"
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      ZEEK_SPOOL_ENABLED: ${ZEEK_SPOOL_ENABLED:-false}
+      ZEEK_SPOOL_DIR: /opt/zeek/spool/zeek
+      PCAP_MAX_UPLOAD_SIZE_MB: 50
+    volumes:
+      # Read-only bind mount for frozen Stage 3 model artifacts
+      - ./artifacts/models:/app/artifacts/models:ro
+      # Shared spool volume for Zeek real-time ingestion
+      - zeek_spool_data:/opt/zeek/spool/zeek
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - soc_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: soc_dashboard_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - soc_net
+
+volumes:
+  postgres_data:
+    driver: local
+  zeek_spool_data:
+    driver: local
+
+networks:
+  soc_net:
+    driver: bridge

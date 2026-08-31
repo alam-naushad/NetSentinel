@@ -14,6 +14,7 @@ from app.api.routes_alerts import router as alerts_router
 from app.api.routes_decisions import router as decisions_router
 from app.api.routes_health import router as health_router
 from app.api.routes_inference import router as inference_router
+from app.api.routes_metrics import router as metrics_router
 from app.api.routes_models import router as models_router
 from app.api.routes_pcap import router as pcap_router
 from app.api.routes_zeek import router as zeek_router
@@ -21,20 +22,27 @@ from app.api.routes_zeek_stream import router as zeek_stream_router
 from app.api.routes_telemetry import router as telemetry_router
 from app.core.config import settings
 from app.core.database import check_database_connection
+from app.core.logging_config import setup_logging
+from app.core.security import SecurityHeadersMiddleware, parse_cors_origins
 from app.services.model_registry import get_model_registry
 from app.services.preprocessor import FeatureValidationError
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+# Initialize structured / console logging
+setup_logging()
 logger = logging.getLogger("backend.app")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup and shutdown lifespan context."""
-    logger.info("Initializing AI Network Anomaly Detection Platform...")
+    logger.info(f"Initializing {settings.APP_NAME} (env={settings.ENVIRONMENT})...")
+
+    # Security check on default credentials in production
+    if settings.ENVIRONMENT == "production" and "soc_password" in settings.DATABASE_URL:
+        logger.warning(
+            "SECURITY WARNING: Default database credentials in use in production mode. "
+            "Please configure POSTGRES_PASSWORD in environment variables."
+        )
 
     # 1. Check database connectivity
     db_status = await check_database_connection()
@@ -50,16 +58,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 f"Database unavailable. Running in explicit ephemeral mode (DATABASE_REQUIRED=false). Error: {db_status.get('error')}"
             )
 
-    # 2. Preload ML models
+    # 2. Preload & verify ML model integrity
     registry = get_model_registry()
     try:
+        registry.validate_required_models_exist()
         sup = registry.get_default_supervised_model()
         anom = registry.get_default_anomaly_model()
         logger.info(
-            f"Preloaded default models: Supervised='{sup.key}', Anomaly='{anom.key}'"
+            f"Preloaded and verified default models: Supervised='{sup.key}', Anomaly='{anom.key}'"
         )
     except Exception as e:
-        logger.warning(f"Could not preload default models on startup: {e}")
+        logger.critical(f"Model integrity / loading check failed: {e}")
+        if settings.ENVIRONMENT == "production":
+            raise RuntimeError(f"Fatal startup error: Model verification failed: {e}")
+        else:
+            logger.warning(f"Running without full default models preloaded: {e}")
 
     # 3. Start Zeek real-time ingestion pipeline (Stage 9B)
     ingestion_tasks = []
@@ -186,10 +199,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Security Headers middleware (defensive response headers, conditional HSTS)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # CORS middleware for frontend dashboard integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=parse_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -212,8 +228,12 @@ async def feature_validation_exception_handler(
     )
 
 
+# Root health probe
+app.include_router(health_router)
+
 # Register API routers under /api/v1 prefix
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(metrics_router, prefix="/api/v1")
 app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(inference_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
