@@ -9,6 +9,7 @@ import { ModelsView } from './components/models/ModelsView';
 import { AnalyticsView } from './components/analytics/AnalyticsView';
 import { PcapAnalysisView } from './components/pcap/PcapAnalysisView';
 import { ZeekAnalysisView } from './components/zeek/ZeekAnalysisView';
+import { ZeekLiveView } from './components/zeek/ZeekLiveView';
 import { AlertsView } from './components/alerts/AlertsView';
 import { HistoricalEventsView } from './components/history/HistoricalEventsView';
 
@@ -24,6 +25,7 @@ export function App() {
         {activeTab === 'batch' && <BatchView />}
         {activeTab === 'pcap' && <PcapAnalysisView />}
         {activeTab === 'zeek' && <ZeekAnalysisView />}
+        {activeTab === 'zeek-live' && <ZeekLiveView />}
         {activeTab === 'history' && <HistoricalEventsView />}
         {activeTab === 'models' && <ModelsView />}
         {activeTab === 'analytics' && <AnalyticsView />}

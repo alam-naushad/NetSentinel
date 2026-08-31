@@ -6,6 +6,7 @@ from app.db.models.security_event import SecurityEvent
 from app.db.models.flow_provenance import FlowProvenance
 from app.db.models.model_decision import ModelDecision
 from app.db.models.alert import Alert, AlertHistory
+from app.db.models.ingestion_checkpoint import IngestionCheckpoint
 
 __all__ = [
     "Base",
@@ -17,4 +18,5 @@ __all__ = [
     "ModelDecision",
     "Alert",
     "AlertHistory",
+    "IngestionCheckpoint",
 ]

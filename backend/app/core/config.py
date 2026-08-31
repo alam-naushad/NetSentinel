@@ -87,5 +87,53 @@ class Settings(BaseSettings):
         description="Maximum number of connections to parse from a single Zeek log file",
     )
 
+    # Zeek Real-Time Spool Ingestion (Stage 9B)
+    ZEEK_SPOOL_ENABLED: bool = Field(
+        default=False,
+        description="Enable real-time spool directory ingestion on startup",
+    )
+    ZEEK_SPOOL_DIR: str = Field(
+        default="/opt/zeek/spool/zeek",
+        description="Whitelisted spool directory for Zeek log tailing (absolute path)",
+    )
+    ZEEK_SPOOL_POLL_INTERVAL_SEC: float = Field(
+        default=1.0, ge=0.1, le=30.0,
+        description="Filesystem poll interval in seconds",
+    )
+    ZEEK_SPOOL_FILE_PATTERN: str = Field(
+        default="conn*.log",
+        description="Glob pattern for Zeek log files to tail within the spool directory",
+    )
+    ZEEK_QUEUE_MAX_SIZE: int = Field(
+        default=4096, ge=64, le=65536,
+        description="Bounded asyncio queue capacity for ingestion pipeline",
+    )
+    ZEEK_BATCH_SIZE: int = Field(
+        default=50, ge=1, le=1000,
+        description="Records per micro-batch before database flush",
+    )
+    ZEEK_BATCH_FLUSH_INTERVAL_SEC: float = Field(
+        default=2.0, ge=0.1, le=30.0,
+        description="Maximum seconds before flushing a partial micro-batch",
+    )
+    ZEEK_DEDUP_CACHE_SIZE: int = Field(
+        default=10_000, ge=100, le=1_000_000,
+        description="UID dedup LRU cache capacity",
+    )
+
+    # Zeek SSE Streaming (Stage 9B)
+    ZEEK_SSE_MAX_CLIENTS: int = Field(
+        default=32, ge=1, le=256,
+        description="Maximum concurrent SSE connections",
+    )
+    ZEEK_SSE_REPLAY_BUFFER_SIZE: int = Field(
+        default=256, ge=0, le=10_000,
+        description="Ring buffer size for Last-Event-ID SSE replay",
+    )
+    ZEEK_SSE_HEARTBEAT_SEC: float = Field(
+        default=15.0, ge=1.0, le=120.0,
+        description="SSE heartbeat comment interval in seconds",
+    )
+
 
 settings = Settings()
