@@ -1,12 +1,10 @@
-# Deployment Guide: Hardened Capstone Deployment
+# Deployment & Infrastructure Guide: Stage 11
 
-This document provides complete instructions for deploying the **AI Network Anomaly Detection and Intrusion Intelligence Platform** in a reproducible, hardened multi-container environment.
+This guide provides comprehensive documentation for deploying, managing, and maintaining the **AI Network Anomaly Detection and Intrusion Intelligence Platform** using containerized Docker infrastructure and PostgreSQL persistence.
 
 ---
 
-## 1. Architecture Overview
-
-The platform uses a modular, containerized 3-tier architecture:
+## 1. System Architecture Overview
 
 ```mermaid
 flowchart TD
@@ -22,142 +20,135 @@ flowchart TD
     NGINX -->|Static UI / SPA| NGINX
     NGINX -->|/api/* -> proxy_pass| API
     NGINX -->|/health -> proxy_pass| API
-    API -->|Async SQLAlchemy| PG
+    API -->|Async SQLAlchemy / asyncpg| PG
     API <-->|Tail & Offset Checkpoint| SPOOL
     MODELS -->|Read-only model bundle| API
 ```
 
-### Services
-1. **`postgres`** (`postgres:16-alpine`): Relational persistence for analysis jobs, security events, flow provenance, model decisions, SOC alerts, and durable ingestion checkpoints.
-2. **`backend`** (`Dockerfile.backend`): Python 3.12 FastAPI service executing packet reconstruction, ML inference (XGBoost + Isolation Forest), hybrid risk triage, and Zeek spool tailing.
-3. **`frontend`** (`Dockerfile.frontend`): Static React SPA built with Vite and served via hardened Nginx with SSE unbuffered streaming proxy support.
+### Container Services
+1. **`postgres`** (`postgres:16-alpine`): Dedicated relational database container initializing with non-superuser role `soc_user` via `docker/postgres/init-db.sql`. Internal to `soc_net` in production.
+2. **`backend`** (`Dockerfile.backend`): Multi-stage Python 3.12 container running as non-root `appuser` (UID 1000). Controlled via `docker/backend/entrypoint.sh` executing database wait-for loops, automated Alembic migrations, and model integrity checks.
+3. **`frontend`** (`Dockerfile.frontend`): Multi-stage Node 20 build served by `nginx:1.25-alpine`. Reverse proxies `/api/` with SSE unbuffered streaming support (`proxy_buffering off; proxy_cache off;`).
 
 ---
 
-## 2. Model Artifact Provisioning Strategy
+## 2. Prerequisites & Environment Setup
 
-> **CRITICAL INVARIANT**:
-> The Stage 3 machine learning model binaries (`*.joblib`) are excluded from Git to prevent large binary repository bloat. They are provisioned into the container via a **read-only bind mount**.
+### System Requirements
+- Docker Engine 24.0+ & Docker Compose v2 (or Python 3.12 + Node 20 for host development)
+- Frozen Stage 3 model artifacts present in `artifacts/models/`
 
-### Mounting Configuration in `docker-compose.prod.yml`:
-```yaml
-volumes:
-  - ./artifacts/models:/app/artifacts/models:ro
+### Environment Configuration (.env)
+Copy the template and configure variables:
+```bash
+cp .env.example .env
 ```
 
-### Fail-Fast Integrity Verification
-On container startup, the backend verifies that required model binaries exist and match their expected SHA-256 checksums:
-- `protocol_a_xgboost_k48.joblib` (SHA-256: `7d9b78ff493f4ab0588022aeaef35bb02fd328751f52eb02e79ae7c488f50b89`)
-- `protocol_a_isolationforest_k48.joblib` (SHA-256: `92cd85d0ece2f5a66df5442046ce9487f14551eaa9ee620d2e106132b880ad30`)
-
-If any model file is missing or corrupted, container initialization **fails immediately with an explicit fatal error** rather than attempting to retrain or substitute models.
+Key configuration variables:
+- `POSTGRES_DB`: Target database name (default: `soc_telemetry`)
+- `POSTGRES_USER`: Application database user (default: `soc_user`)
+- `POSTGRES_PASSWORD`: Database password
+- `DATABASE_REQUIRED`: `true` for production, `false` for development
+- `CORS_ORIGINS`: Comma-separated list of allowed origins
+- `ENABLE_HTTPS`: Set `true` when behind TLS termination to emit HSTS headers
+- `ZEEK_SPOOL_DIR`: Spool mount path (default: `/opt/zeek/spool/zeek`)
 
 ---
 
-## 3. Quickstart Deployment (1 Command)
+## 3. Launching the Stack
 
-### Prerequisites
-- Docker Engine 24.0+ & Docker Compose v2
-- Frozen model artifacts present in `artifacts/models/`
-
-### Launch Steps
+### Production Multi-Container Deployment (1 Command)
 ```bash
-# 1. Clone or navigate to the repository
-cd i-x20
-
-# 2. Copy and configure environment variables
-cp .env.example .env
-
-# 3. Build and launch all services in detached mode
+# Build and start all services in detached mode
 docker compose -f docker-compose.prod.yml up --build -d
 
-# 4. Verify running services and health status
+# Verify container health status
 docker compose -f docker-compose.prod.yml ps
 ```
 
-Access the application:
+### Development Stack Launch
+```bash
+# Start development composition with exposed Postgres port (5432)
+docker compose up --build -d
+```
+
+### Access Platform Endpoints
 - **SOC Analyst Dashboard**: `http://localhost`
-- **Backend API Docs**: `http://localhost:8000/docs` (or via proxy `http://localhost/api/docs`)
+- **Interactive API Documentation**: `http://localhost:8000/docs` (or `http://localhost/api/docs`)
 - **Health Liveness Probe**: `http://localhost/health/live`
 - **Health Readiness Probe**: `http://localhost/health/ready`
+- **Platform Telemetry Metrics**: `http://localhost/api/v1/metrics`
 
 ---
 
-## 4. Local Development Setup (Without Docker)
+## 4. Frozen Model Artifact Provisioning & Integrity
 
-### Backend (Python 3.12)
-```bash
-# 1. Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Or on Windows: .venv\Scripts\activate
+> **CRITICAL INVARIANT**:
+> Model binaries (`*.joblib`) are mounted **read-only** (`./artifacts/models:/app/artifacts/models:ro`). The backend container cannot modify or overwrite these files.
 
-# 2. Install dependencies
-pip install -r backend/requirements.txt
+On startup, `docker/backend/entrypoint.sh` validates the SHA-256 checksums of required models:
+- `protocol_a_xgboost_k48.joblib` (SHA-256: `7d9b78ff493f4ab0588022aeaef35bb02fd328751f52eb02e79ae7c488f50b89`)
+- `protocol_a_isolationforest_k48.joblib` (SHA-256: `92cd85d0ece2f5a66df5442046ce9487f14551eaa9ee620d2e106132b880ad30`)
 
-# 3. Start PostgreSQL container
-docker compose up -d postgres
-
-# 4. Apply database migrations
-cd backend
-alembic upgrade head
-
-# 5. Start development API server with reload
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### Frontend (Node 20)
-```bash
-cd frontend
-npm install
-npm run dev
-# Dashboard available at http://localhost:5173
-```
+If models are missing or corrupted, startup fails immediately with an actionable error.
 
 ---
 
-## 5. Database Migration & Maintenance
+## 5. Database Migrations & Initialization
 
-Database migrations are managed via Alembic. In containerized production, migrations run automatically on backend entry.
+- **First Boot**: `docker/postgres/init-db.sql` runs on volume creation, configuring least-privilege permissions for `soc_user`.
+- **Automated Migration**: `docker/backend/entrypoint.sh` executes `alembic upgrade head` on container launch before starting Uvicorn.
+- **Manual Migration Commands**:
+  ```bash
+  # Check current revision
+  docker compose -f docker-compose.prod.yml exec backend alembic current
 
-To inspect or manually run migrations:
-```bash
-# Inspect migration history
-docker compose -f docker-compose.prod.yml exec backend alembic history
-
-# Upgrade to latest migration head
-docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
-
-# Check current revision
-docker compose -f docker-compose.prod.yml exec backend alembic current
-```
+  # Upgrade schema
+  docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
+  ```
 
 ---
 
-## 6. Backup and Restore Procedures
+## 6. Database Backup and Restore Procedures
+
+The platform provides operator scripts supporting compressed custom archives (`.dump`) and plain SQL:
 
 ### Database Backup
 ```bash
-docker compose -f docker-compose.prod.yml exec postgres \
-    pg_dump -U soc_user -d soc_telemetry -F c -b -v -f /tmp/soc_backup.dump
+# Run backup script (creates ./backups/soc_telemetry_backup_YYYYMMDD_HHMMSSZ.dump)
+python scripts/backup_db.py --output-dir ./backups --format custom
 
-# Copy backup dump to host machine
-docker cp soc_telemetry_postgres:/tmp/soc_backup.dump ./soc_backup_$(date +%Y%m%d).dump
+# Or execute inside Docker container:
+docker compose -f docker-compose.prod.yml exec postgres \
+    pg_dump -U soc_user -d soc_telemetry -Fc -f /tmp/backup.dump
 ```
 
 ### Database Restore
 ```bash
-# Copy dump file into postgres container
-docker cp ./soc_backup.dump soc_telemetry_postgres:/tmp/soc_backup.dump
+# Run restore script
+python scripts/restore_db.py --backup-file ./backups/soc_telemetry_backup_20260831_100000Z.dump --clean
 
-# Restore database
+# Or execute inside Docker container:
 docker compose -f docker-compose.prod.yml exec postgres \
-    pg_restore -U soc_user -d soc_telemetry --clean --if-exists -v /tmp/soc_backup.dump
+    pg_restore -U soc_user -d soc_telemetry --clean --if-exists /tmp/backup.dump
 ```
 
 ---
 
-## 7. Verification Audit Disclosure
+## 7. Zeek Spool Permissions & Shared Volumes
 
-- **Docker Deployment Smoke Test**: **UNVERIFIED** on host environments lacking Docker Engine / CLI.
-- **Live PostgreSQL Backup/Restore Round-Trip**: **UNVERIFIED** on host environments lacking local `pg_dump` binary or live Docker daemon.
+- The Zeek spool volume `zeek_spool_data` is mounted at `/opt/zeek/spool/zeek`.
+- The backend process runs as non-root `appuser` (UID 1000).
+- `Dockerfile.backend` ensures directory permissions (`chown -R appuser:appuser /opt/zeek/spool/zeek`).
+- When external Zeek engines write logs into the shared volume, ensure file permissions allow read access (`chmod 644 conn*.log`).
 
+---
+
+## 8. Troubleshooting & Diagnostics
+
+| Symptom | Probable Cause | Action |
+| :--- | :--- | :--- |
+| **Backend exits immediately** | Database unavailable or model checksum mismatch | Inspect container logs: `docker compose -f docker-compose.prod.yml logs backend` |
+| **SSE stream stalls** | Proxy buffering enabled | Verify Nginx config includes `proxy_buffering off; proxy_cache off;` |
+| **Alembic migration failure** | Dirty database state | Run `alembic current` and resolve pending lock or down-revision |
+| **Readiness probe returns 503** | Database disconnected or models not loaded | Check `GET /health/ready` response payload for specific component status |

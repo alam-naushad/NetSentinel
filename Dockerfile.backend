@@ -42,8 +42,10 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 COPY --chown=appuser:appuser backend/ /app/backend/
 COPY --chown=appuser:appuser ml/ /app/ml/
 
-# Create mount points for models and zeek spool
-RUN mkdir -p /app/artifacts/models /opt/zeek/spool/zeek \
+# Copy entrypoint script and create mount points
+COPY --chown=appuser:appuser docker/ /app/docker/
+RUN chmod +x /app/docker/backend/entrypoint.sh \
+    && mkdir -p /app/artifacts/models /opt/zeek/spool/zeek \
     && chown -R appuser:appuser /app /opt/zeek/spool/zeek
 
 USER appuser
@@ -55,4 +57,5 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
 
 WORKDIR /app/backend
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+ENTRYPOINT ["/app/docker/backend/entrypoint.sh"]
+
