@@ -28,8 +28,8 @@ class Alert(Base, TimestampMixin):
         primary_key=True,
         default=uuid.uuid4,
     )
-    event_id: Mapped[uuid.UUID] = mapped_column(
-        GUID(),
+    event_id: Mapped[str] = mapped_column(
+        String(36),
         ForeignKey("security_events.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
