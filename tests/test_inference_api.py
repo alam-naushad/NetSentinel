@@ -251,6 +251,12 @@ class InferenceApiTests(unittest.TestCase):
         self.assertEqual(data["predicted_family"], "BENIGN")
         self.assertGreater(data["class_confidence"], 0.80)
         self.assertIn("BENIGN", data["class_probabilities"])
+        # Regression check: verify BENIGN has highest probability (not INFILTRATION or any other class)
+        probs = data["class_probabilities"]
+        self.assertGreater(probs["BENIGN"], 0.99)
+        max_prob_class = max(probs, key=probs.get)
+        self.assertEqual(max_prob_class, "BENIGN")
+        self.assertGreater(probs["BENIGN"], probs.get("INFILTRATION", 0.0) * 1000)
         self.assertIsInstance(data["raw_decision_score"], float)
         self.assertIsInstance(data["is_statistical_anomaly"], bool)
         self.assertGreater(data["inference_latency_ms"], 0.0)

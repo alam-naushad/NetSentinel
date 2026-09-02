@@ -78,11 +78,11 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({ pred
           <span>Multi-Class Softmax Probability Distribution</span>
           <span className="text-[10px] text-slate-400">9-Class Classifier Vector</span>
         </div>
-        <div className="h-44 w-full">
+        <div className="h-60 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={probData} layout="vertical" margin={{ top: 5, right: 30, left: 70, bottom: 5 }}>
+            <BarChart data={probData} layout="vertical" margin={{ top: 5, right: 30, left: 80, bottom: 5 }}>
               <XAxis type="number" domain={[0, 1]} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} stroke="#64748b" fontSize={10} />
-              <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={10} width={80} />
+              <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={10} width={85} interval={0} />
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
