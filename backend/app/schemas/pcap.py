@@ -55,6 +55,9 @@ class PcapFlowResult(BaseModel):
     severity: str = Field(..., description="Severity level: LOW, MEDIUM, HIGH, CRITICAL")
     status: str = Field(..., description="Detection status: NORMAL, UNKNOWN_ANOMALY, KNOWN_ATTACK")
     explanation: str = Field(..., description="Human-readable triage explanation")
+    features: Optional[dict[str, float]] = Field(
+        default=None, description="Reconstructed 48-feature vector"
+    )
 
 
 class PcapFlowDetailResult(PcapFlowResult):

@@ -288,6 +288,24 @@ class PcapApiTests(unittest.IsolatedAsyncioTestCase):
         for prov_key in ["flow_id", "src_ip", "dst_ip", "src_port", "dst_port", "protocol_name", "start_time_iso", "end_time_iso"]:
             self.assertNotIn(prov_key, FlowFeaturesInput.model_fields)
 
+    def test_pcap_flow_includes_reconstructed_features(self):
+        """Regression test: verify POST /api/v1/pcap/analyze includes the 48 reconstructed features in each flow."""
+        pcap_bytes = self._create_synthetic_tcp_pcap()
+        files = {"file": ("features_test.pcap", io.BytesIO(pcap_bytes), "application/vnd.tcpdump.pcap")}
+
+        resp = self.client.post("/api/v1/pcap/analyze", files=files)
+        self.assertEqual(resp.status_code, 200)
+
+        flow = resp.json()["flows"][0]
+        self.assertIn("features", flow)
+        features = flow["features"]
+        self.assertIsNotNone(features)
+        self.assertEqual(len(features), 48)
+        # Verify key features inspected in UI are present and numeric
+        for key in ["destination_port", "flow_bytes_per_sec", "fwd_packets_per_sec", "bwd_packets_per_sec", "total_forward_packets"]:
+            self.assertIn(key, features)
+            self.assertIsInstance(features[key], (int, float))
+
     def test_consistency_between_pcap_and_direct_stage4_inference(self):
         """Verify PCAP inference produces identical predictions and anomaly scores as direct /predict/flow on reconstructed features."""
         pcap_bytes = self._create_synthetic_tcp_pcap()
