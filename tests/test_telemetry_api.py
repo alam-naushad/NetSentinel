@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.core.database import get_db
+from app.core.security import AuthenticatedUser, get_current_user
 from app.db.base import Base
 from app.db.models.alert import Alert, AlertHistory
 from app.db.models.analysis_job import AnalysisJob
@@ -43,6 +44,7 @@ class TelemetryApiTests(unittest.IsolatedAsyncioTestCase):
                     raise
 
         app.dependency_overrides[get_db] = override_get_db
+        app.dependency_overrides[get_current_user] = lambda: AuthenticatedUser(username="analyst_bob", role="analyst")
         self.client = TestClient(app)
 
         # Seed sample job, event, and alert

@@ -6,11 +6,12 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes_alerts import router as alerts_router
+from app.api.routes_auth import router as auth_router
 from app.api.routes_decisions import router as decisions_router
 from app.api.routes_health import router as health_router
 from app.api.routes_inference import router as inference_router
@@ -23,7 +24,12 @@ from app.api.routes_telemetry import router as telemetry_router
 from app.core.config import settings
 from app.core.database import check_database_connection
 from app.core.logging_config import setup_logging
-from app.core.security import SecurityHeadersMiddleware, parse_cors_origins
+from app.core.security import (
+    SecurityHeadersMiddleware,
+    get_current_user,
+    parse_cors_origins,
+    validate_auth_configuration,
+)
 from app.services.model_registry import get_model_registry
 from app.services.preprocessor import FeatureValidationError
 
@@ -43,6 +49,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "SECURITY WARNING: Default database credentials in use in production mode. "
             "Please configure POSTGRES_PASSWORD in environment variables."
         )
+
+    # Validate authentication configuration (fail-closed in production)
+    validate_auth_configuration()
 
     # 1. Check database connectivity
     db_status = await check_database_connection()
@@ -228,17 +237,21 @@ async def feature_validation_exception_handler(
     )
 
 
-# Root health probe
+# Root health probe (Public)
 app.include_router(health_router)
 
 # Register API routers under /api/v1 prefix
+# Public endpoints
 app.include_router(health_router, prefix="/api/v1")
-app.include_router(metrics_router, prefix="/api/v1")
-app.include_router(decisions_router, prefix="/api/v1")
-app.include_router(inference_router, prefix="/api/v1")
-app.include_router(models_router, prefix="/api/v1")
-app.include_router(pcap_router, prefix="/api/v1")
-app.include_router(zeek_router, prefix="/api/v1")
-app.include_router(zeek_stream_router, prefix="/api/v1")
-app.include_router(telemetry_router, prefix="/api/v1")
-app.include_router(alerts_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
+
+# Authenticated application endpoints (guarded by session cookie)
+app.include_router(metrics_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(decisions_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(inference_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(models_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(pcap_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(zeek_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(zeek_stream_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(telemetry_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(alerts_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])

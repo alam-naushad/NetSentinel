@@ -17,6 +17,7 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
   try {
     const response = await fetch(url, {
       ...options,
+      credentials: options.credentials || 'same-origin',
       headers,
     });
 
@@ -24,6 +25,12 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
     const data = isJson ? await response.json() : null;
 
     if (!response.ok) {
+      // If an authenticated endpoint returns 401, signal session expiration
+      if (response.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/me')) {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('netsentinel:unauthorized'));
+        }
+      }
       let errorMessage = `Request failed with status ${response.status}`;
       let missing_features: string[] | undefined;
       let invalid_fields: string[] | undefined;

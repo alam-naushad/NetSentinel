@@ -1,6 +1,7 @@
 import React from 'react';
-import { Activity, Shield, RefreshCw, Cpu, Database, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Activity, Shield, RefreshCw, Cpu, Database, CheckCircle2, AlertCircle, User, LogOut } from 'lucide-react';
 import { useApp } from '../../context/useApp';
+import { useAuth } from '../../context/AuthContext';
 
 export const Header: React.FC = () => {
   const {
@@ -12,6 +13,7 @@ export const Header: React.FC = () => {
     refreshModels,
     isLoadingCatalog,
   } = useApp();
+  const { user, logout } = useAuth();
 
   const handleRefresh = async () => {
     await Promise.all([refreshHealth(), refreshModels()]);
@@ -76,6 +78,27 @@ export const Header: React.FC = () => {
         >
           <RefreshCw className={`w-4 h-4 ${isLoadingCatalog ? 'animate-spin text-blue-400' : ''}`} />
         </button>
+
+        {/* Authenticated Operator Info & Logout */}
+        {user && (
+          <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-950/80 border border-slate-800 text-xs text-slate-200">
+              <User className="w-3.5 h-3.5 text-blue-400" />
+              <span className="font-mono font-medium">{user.username}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 px-1 py-0.5 rounded bg-slate-800">
+                {user.role}
+              </span>
+            </div>
+            <button
+              onClick={logout}
+              title="Sign Out of SOC Session"
+              className="p-2 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-400 hover:text-red-400 hover:bg-red-950/30 hover:border-red-800/40 transition-colors cursor-pointer"
+              aria-label="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

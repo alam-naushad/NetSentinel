@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import AuthenticatedUser, get_current_user
 from app.db.repositories.alert_repository import AlertRepository
 from app.schemas.alerts import (
     AlertDetail,
@@ -154,6 +155,7 @@ async def get_alert_detail(
 async def update_alert_disposition(
     alert_id: uuid.UUID,
     payload: UpdateAlertRequest,
+    current_user: AuthenticatedUser = Depends(get_current_user),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> AlertDetail:
     """Update alert disposition and atomically append an immutable audit record."""
@@ -169,11 +171,15 @@ async def update_alert_disposition(
             detail=f"Invalid disposition '{payload.new_disposition}'. Allowed: {sorted(VALID_DISPOSITIONS)}",
         )
 
+    # Security requirement: actor_id is strictly derived from the authenticated server identity.
+    # Any client-supplied payload.actor_id is completely ignored for audit integrity.
+    server_actor_id = current_user.username
+
     repo = AlertRepository(db)
     updated_alert = await repo.update_disposition(
         alert_id=alert_id,
         new_disposition=new_disp,
-        actor_id=payload.actor_id or "analyst",
+        actor_id=server_actor_id,
         note=payload.note,
     )
 

@@ -68,6 +68,40 @@ class Settings(BaseSettings):
         default=None,
         description="Optional API key for deployment-level request guarding (via X-API-Key header)",
     )
+
+    # Application Authentication & Session Management
+    AUTH_SECRET_KEY: str | None = Field(
+        default=None,
+        description="Cryptographic secret key for signing session cookies. Required in production.",
+    )
+    AUTH_SESSION_COOKIE_NAME: str = Field(
+        default="netsentinel_session",
+        description="Name of the HttpOnly signed session cookie",
+    )
+    AUTH_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=480,
+        ge=5,
+        le=10080,
+        description="Session token validity lifetime in minutes (default 8 hours)",
+    )
+    AUTH_USERNAME: str | None = Field(
+        default=None,
+        description="Primary SOC analyst username",
+    )
+    AUTH_PASSWORD_HASH: str | None = Field(
+        default=None,
+        description="PBKDF2-HMAC-SHA256 password hash for AUTH_USERNAME",
+    )
+    AUTH_USERS_JSON: str | None = Field(
+        default=None,
+        description="JSON dictionary mapping usernames to PBKDF2 password hashes",
+    )
+    AUTH_LOGIN_RATE_LIMIT_PER_MIN: int = Field(
+        default=5,
+        ge=1,
+        le=100,
+        description="Maximum failed login attempts per minute per client IP before throttling",
+    )
     PCAP_MAX_UPLOAD_SIZE_MB: int = Field(
         default=50,
         ge=1,
