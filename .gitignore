@@ -10,6 +10,9 @@ dist/
 
 # Local configuration and runtime data
 .env
+.htpasswd
+*.htpasswd
+docker/nginx/.htpasswd
 data/raw/*
 data/extracted/*
 data/processed/*
