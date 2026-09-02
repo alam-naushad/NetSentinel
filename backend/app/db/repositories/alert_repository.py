@@ -120,17 +120,20 @@ class AlertRepository:
             alert.resolved_at = now_utc
 
         # 2. Append immutable Audit History Record
-        AlertHistory(
+        history_entry = AlertHistory(
             id=uuid.uuid4(),
             alert=alert,
+            alert_id=alert.id,
             timestamp=now_utc,
             previous_disposition=previous_disp,
             new_disposition=new_disposition,
             actor_id=actor_id,
             action_note=note,
         )
+        self.session.add(history_entry)
 
         await self.session.flush()
+        await self.session.refresh(alert, ["history"])
         return alert
 
     async def get_alert_counts_by_disposition(self) -> dict[str, int]:

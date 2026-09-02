@@ -21,6 +21,7 @@ from app.db.models.analysis_job import AnalysisJob
 from app.db.models.flow_provenance import FlowProvenance
 from app.db.models.model_decision import ModelDecision
 from app.db.models.security_event import SecurityEvent
+from app.db.repositories.alert_repository import AlertRepository
 
 
 class DbModelTests(unittest.IsolatedAsyncioTestCase):
@@ -191,6 +192,77 @@ class DbModelTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(loaded_alert.history[0].new_disposition, "OPEN")
             self.assertEqual(loaded_alert.history[1].new_disposition, "INVESTIGATING")
             self.assertEqual(loaded_alert.history[2].new_disposition, "RESOLVED")
+
+    async def test_alert_repository_update_disposition_persists_audit_trail(self):
+        """Regression test: verify AlertRepository.update_disposition persists new AlertHistory to DB."""
+        # 1. Create alert with initial INIT -> OPEN history
+        async with self.session_factory() as session:
+            event = SecurityEvent(
+                id=uuid.uuid4(),
+                event_timestamp=datetime.now(timezone.utc),
+                source_channel="PCAP_BATCH",
+                predicted_family="DDOS",
+                class_confidence=0.99,
+                risk_score=90,
+                severity="CRITICAL",
+                triage_status="KNOWN_ATTACK",
+            )
+            alert = Alert(
+                id=uuid.uuid4(),
+                event_id=event.id,
+                alert_type="KNOWN_ATTACK_DDOS",
+                severity="CRITICAL",
+                disposition="OPEN",
+                policy_version_applied="policy-alert-v1.0",
+            )
+            initial_history = AlertHistory(
+                id=uuid.uuid4(),
+                alert_id=alert.id,
+                timestamp=datetime.now(timezone.utc),
+                previous_disposition=None,
+                new_disposition="OPEN",
+                actor_id="system_triage_engine",
+                action_note="Initial alert creation",
+            )
+            session.add_all([event, alert, initial_history])
+            await session.commit()
+            alert_id = alert.id
+
+        # 2. Change disposition OPEN -> INVESTIGATING using update_disposition()
+        async with self.session_factory() as session:
+            repo = AlertRepository(session)
+            updated = await repo.update_disposition(
+                alert_id=alert_id,
+                new_disposition="INVESTIGATING",
+                actor_id="soc_analyst_1",
+                note="Investigating anomalous LOIC flood",
+            )
+            self.assertIsNotNone(updated)
+            self.assertEqual(updated.disposition, "INVESTIGATING")
+            # Verify the in-session history contains both records immediately
+            self.assertEqual(len(updated.history), 2)
+            await session.commit()
+
+        # 3. Use a fresh database session/re-fetch to verify alert disposition is INVESTIGATING
+        async with self.session_factory() as session:
+            repo = AlertRepository(session)
+            reloaded_alert = await repo.get_by_id(alert_id)
+            self.assertIsNotNone(reloaded_alert)
+            self.assertEqual(reloaded_alert.disposition, "INVESTIGATING")
+
+            # 4. Verify history contains BOTH records: INIT -> OPEN and OPEN -> INVESTIGATING
+            self.assertEqual(len(reloaded_alert.history), 2)
+            h0 = reloaded_alert.history[0]
+            self.assertIsNone(h0.previous_disposition)
+            self.assertEqual(h0.new_disposition, "OPEN")
+            self.assertEqual(h0.actor_id, "system_triage_engine")
+
+            # 5. Verify actor_id and analyst note for the new transition
+            h1 = reloaded_alert.history[1]
+            self.assertEqual(h1.previous_disposition, "OPEN")
+            self.assertEqual(h1.new_disposition, "INVESTIGATING")
+            self.assertEqual(h1.actor_id, "soc_analyst_1")
+            self.assertEqual(h1.action_note, "Investigating anomalous LOIC flood")
 
 
 if __name__ == "__main__":

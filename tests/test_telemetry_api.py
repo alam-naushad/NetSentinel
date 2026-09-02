@@ -203,6 +203,17 @@ class TelemetryApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(alert_data["history"][1]["new_disposition"], "INVESTIGATING")
         self.assertEqual(alert_data["history"][1]["actor_id"], "analyst_bob")
 
+        # 3. Subsequent GET in a fresh request / session: verify history persistence
+        resp_get = self.client.get(f"/api/v1/alerts/{self.seeded_alert_id}")
+        self.assertEqual(resp_get.status_code, 200)
+        get_data = resp_get.json()
+        self.assertEqual(get_data["disposition"], "INVESTIGATING")
+        self.assertEqual(len(get_data["history"]), 2)
+        self.assertEqual(get_data["history"][0]["new_disposition"], "OPEN")
+        self.assertEqual(get_data["history"][1]["new_disposition"], "INVESTIGATING")
+        self.assertEqual(get_data["history"][1]["actor_id"], "analyst_bob")
+        self.assertEqual(get_data["history"][1]["action_note"], "Beginning packet-level trace inspection")
+
 
 if __name__ == "__main__":
     unittest.main()
