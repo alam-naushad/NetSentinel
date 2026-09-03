@@ -112,6 +112,36 @@ class TestAuthenticationMechanisms:
         assert "samesite=lax" in cookie_header.lower()
         assert "path=/" in cookie_header.lower()
 
+    def test_enable_https_sets_secure_cookie_attribute(self, auth_client):
+        """Test ENABLE_HTTPS=True adds Secure flag to issued session cookies."""
+        client = auth_client["client"]
+        username = auth_client["username"]
+        password = auth_client["password"]
+
+        orig_enable_https = settings.ENABLE_HTTPS
+        try:
+            # When ENABLE_HTTPS is True
+            settings.ENABLE_HTTPS = True
+            resp = client.post("/api/v1/auth/login", json={"username": username, "password": password})
+            assert resp.status_code == 200
+            cookie_header = resp.headers.get("set-cookie", "")
+            assert "secure" in cookie_header.lower()
+
+            # Logout also has Secure flag
+            resp_logout = client.post("/api/v1/auth/logout")
+            assert resp_logout.status_code == 200
+            logout_cookie = resp_logout.headers.get("set-cookie", "")
+            assert "secure" in logout_cookie.lower()
+
+            # When ENABLE_HTTPS is False
+            settings.ENABLE_HTTPS = False
+            resp_insecure = client.post("/api/v1/auth/login", json={"username": username, "password": password})
+            assert resp_insecure.status_code == 200
+            insecure_cookie = resp_insecure.headers.get("set-cookie", "")
+            assert "secure" not in insecure_cookie.lower()
+        finally:
+            settings.ENABLE_HTTPS = orig_enable_https
+
     def test_login_incorrect_password_returns_generic_401(self, auth_client):
         """Test wrong password returns generic 401 without revealing password specifics."""
         client = auth_client["client"]

@@ -37,3 +37,14 @@ htmlcov/
 
 # Codex task workspace
 work/
+
+# TLS / SSL Certificates and Keys
+*.pem
+*.key
+*.crt
+*.csr
+certs/
+certbot/
+.certbot/
+docker/nginx/certs/
+docker/nginx/ssl/
