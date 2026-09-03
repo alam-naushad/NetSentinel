@@ -36,6 +36,11 @@ services:
       ZEEK_SPOOL_ENABLED: ${ZEEK_SPOOL_ENABLED:-false}
       ZEEK_SPOOL_DIR: /opt/zeek/spool/zeek
       PCAP_MAX_UPLOAD_SIZE_MB: 50
+      AUTH_SECRET_KEY: ${AUTH_SECRET_KEY}
+      AUTH_USERNAME: ${AUTH_USERNAME}
+      AUTH_PASSWORD_HASH: ${AUTH_PASSWORD_HASH}
+      AUTH_SESSION_COOKIE_NAME: ${AUTH_SESSION_COOKIE_NAME:-netsentinel_session}
+      AUTH_TOKEN_EXPIRE_MINUTES: ${AUTH_TOKEN_EXPIRE_MINUTES:-480}
     volumes:
       # Read-only bind mount for frozen Stage 3 model artifacts
       - ./artifacts/models:/app/artifacts/models:ro
