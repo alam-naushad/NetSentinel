@@ -85,6 +85,14 @@ class TestAuthenticationMechanisms:
         assert verify_password(raw_pw, h2) is True
         assert verify_password(raw_pw + "wrong", h1) is False
 
+        # Docker Compose $$ escaping normalization verification
+        h1_escaped = h1.replace("$", "$$")
+        assert verify_password(raw_pw, h1_escaped) is True
+
+        # Malformed hash handling
+        assert verify_password(raw_pw, "invalid_hash_string") is False
+        assert verify_password(raw_pw, "pbkdf2:sha256:600000$onlytwoparts") is False
+
     def test_login_success_sets_httponly_cookie(self, auth_client):
         """Test successful login yields HTTP 200 and sets HttpOnly cookie."""
         client = auth_client["client"]

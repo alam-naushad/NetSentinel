@@ -53,6 +53,7 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
       interval: 10s
       timeout: 5s
+      start_period: 30s
       retries: 3
     networks:
       - soc_net
@@ -68,6 +69,12 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      start_period: 30s
+      retries: 3
     networks:
       - soc_net
 

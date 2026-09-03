@@ -194,7 +194,8 @@ def hash_password(plain_password: str, iterations: int = PBKDF2_ITERATIONS) -> s
 def verify_password(plain_password: str, password_hash: str) -> bool:
     """Constant-time verification of a password against PBKDF2-HMAC-SHA256 hash."""
     try:
-        parts = password_hash.split("$")
+        clean_hash = password_hash.replace("$$", "$")
+        parts = clean_hash.split("$")
         if len(parts) != 3:
             return False
         meta, salt_hex, hash_hex = parts
@@ -225,7 +226,7 @@ def get_configured_users() -> dict[str, str]:
     """Retrieve mapping of username to PBKDF2 password hash.
 
     Production credentials must be supplied via AUTH_USERNAME & AUTH_PASSWORD_HASH
-    or AUTH_USERS_JSON. No known default passwords exist for production.
+    or AUTH_USERS_JSON. Automatically normalizes Docker Compose '$$' escape sequences.
     """
     users: dict[str, str] = {}
     if settings.AUTH_USERS_JSON:
@@ -233,7 +234,7 @@ def get_configured_users() -> dict[str, str]:
             parsed = json.loads(settings.AUTH_USERS_JSON)
             if isinstance(parsed, dict):
                 users.update({
-                    str(k).strip(): str(v).strip()
+                    str(k).strip(): str(v).strip().replace("$$", "$")
                     for k, v in parsed.items()
                     if isinstance(k, str) and isinstance(v, str)
                 })
@@ -241,7 +242,7 @@ def get_configured_users() -> dict[str, str]:
             logger.error("Failed to parse AUTH_USERS_JSON: %s", e)
 
     if settings.AUTH_USERNAME and settings.AUTH_PASSWORD_HASH:
-        users[settings.AUTH_USERNAME.strip()] = settings.AUTH_PASSWORD_HASH.strip()
+        users[settings.AUTH_USERNAME.strip()] = settings.AUTH_PASSWORD_HASH.strip().replace("$$", "$")
 
     return users
 
@@ -273,10 +274,17 @@ def validate_auth_configuration() -> None:
                 "Please configure AUTH_USERNAME and AUTH_PASSWORD_HASH, or AUTH_USERS_JSON in .env."
             )
         for u, h in users.items():
-            if not h.startswith("pbkdf2:sha256:"):
+            clean_h = h.replace("$$", "$")
+            if not clean_h.startswith("pbkdf2:sha256:"):
                 raise RuntimeError(
                     f"CRITICAL SECURITY CONFIGURATION ERROR: Password hash for user '{u}' "
                     "must be a valid PBKDF2-HMAC-SHA256 hash (pbkdf2:sha256:...)."
+                )
+            parts = clean_h.split("$")
+            if len(parts) != 3:
+                raise RuntimeError(
+                    f"CRITICAL SECURITY CONFIGURATION ERROR: Password hash for user '{u}' "
+                    "is malformed (expected 3 parts separated by $: meta$salt$hash)."
                 )
 
 
