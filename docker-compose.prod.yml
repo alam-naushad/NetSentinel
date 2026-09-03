@@ -65,8 +65,6 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-    volumes:
-      - ./docker/nginx/.htpasswd:/etc/nginx/.htpasswd:ro
     depends_on:
       backend:
         condition: service_healthy
