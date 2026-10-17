@@ -41,6 +41,7 @@ COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 # Copy application backend source code and config
 COPY --chown=appuser:appuser backend/ /app/backend/
 COPY --chown=appuser:appuser ml/ /app/ml/
+COPY --chown=appuser:appuser data/metadata/baseline_feature_distributions.json /app/data/metadata/baseline_feature_distributions.json
 
 # Copy entrypoint script and create mount points
 COPY --chown=appuser:appuser docker/ /app/docker/
