@@ -13,6 +13,10 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from app.schemas.flows import FlowFeaturesInput
+from app.services.zeek.feature_completeness import (
+    CANONICAL_48_FEATURES,
+    evaluate_feature_completeness,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +57,7 @@ class ZeekFlowMeterParser:
     """Parses and validates Zeek flowmeter log data."""
 
     # Set of 48 required canonical feature names
-    CANONICAL_FEATURES = set(FlowFeaturesInput.model_fields.keys())
+    CANONICAL_FEATURES = set(CANONICAL_48_FEATURES)
 
     @classmethod
     def parse_content(
@@ -196,22 +200,18 @@ class ZeekFlowMeterParser:
                 duration=duration,
             )
 
-            # Build 48 features dict
+            # Evaluate feature-schema completeness using formal Stage 3 contract
+            completeness = evaluate_feature_completeness(data)
+            if not completeness.is_eligible_for_ml:
+                return None
+
+            # Build 48 features dict in canonical order
             feature_dict: Dict[str, float] = {}
-            for feat_name in cls.CANONICAL_FEATURES:
+            for feat_name in CANONICAL_48_FEATURES:
                 raw_val = data.get(feat_name)
                 if raw_val is None:
-                    # Check dot/hyphen replacement
                     raw_val = data.get(feat_name.replace("_", "-"))
-                if raw_val is None:
-                    return None
-
-                val = float(raw_val)
-                # Check finiteness
-                if math.isnan(val) or math.isinf(val):
-                    return None
-
-                feature_dict[feat_name] = val
+                feature_dict[feat_name] = float(raw_val)
 
             features = FlowFeaturesInput(**feature_dict)
             return ZeekFlowRecord(provenance=provenance, features=features)

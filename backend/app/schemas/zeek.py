@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from typing import Dict, List, Optional
-from pydantic import BaseModel, ConfigDict
+from enum import Enum
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ZeekConnectionSummary(BaseModel):
@@ -127,4 +128,62 @@ class ZeekSSEEvent(BaseModel):
     history: Optional[str] = None
     event_timestamp: str = ""
     persisted: bool = True
+
+
+# ---------------------------------------------------------------
+# Phase 1 — Feature-Schema Completeness Scoring & Safe Routing
+# ---------------------------------------------------------------
+
+
+class RoutingDecision(str, Enum):
+    """Deterministic routing decision for network flow evaluation."""
+
+    ML_INFERENCE = "ML_INFERENCE"
+    TELEMETRY_ONLY = "TELEMETRY_ONLY"
+
+
+class TrustedSourceChannel(str, Enum):
+    """Enumeration of recognized data source channels with explicit trust boundaries.
+
+    Source compatibility is established exclusively by backend pipeline context,
+    never by trusting client-submitted payload values.
+    """
+
+    PCAP_RECONSTRUCTED = "PCAP_RECONSTRUCTED"  # Verified by PcapParityValidator against CICFlowMeter
+    REST_INFERENCE = "REST_INFERENCE"          # Direct authenticated API evaluation
+    ZEEK_FLOWMETER = "ZEEK_FLOWMETER"          # Zeek packet-level flowmeter log (unverified semantic parity -> telemetry only)
+    ZEEK_CONN = "ZEEK_CONN"                    # Native Zeek conn.log / live spool (connection-level only)
+    UNTRUSTED_CLIENT = "UNTRUSTED_CLIENT"      # Arbitrary or client-tagged input (untrusted)
+
+
+class FeatureCompletenessReport(BaseModel):
+    """Detailed audit report of K=48 feature-schema completeness evaluation."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    total_required_features: int = Field(default=48, description="Total canonical features required by frozen K=48 model schema")
+    valid_features_count: int = Field(..., ge=0, le=48, description="Number of required features meeting presence, type, finiteness, and domain constraints")
+    completeness_score: float = Field(..., ge=0.0, le=1.0, description="Completeness ratio = valid_features_count / 48")
+    is_eligible_for_ml: bool = Field(..., description="Whether flow meets strict dual-gate requirements (source compatibility AND 100% completeness)")
+    route: RoutingDecision = Field(..., description="Deterministic destination pipeline: ML_INFERENCE or TELEMETRY_ONLY")
+    routing_reason: str = Field(..., description="Deterministic human-readable explanation of routing decision")
+    missing_features: List[str] = Field(default_factory=list, description="Canonical feature names absent from the input payload")
+    invalid_features: Dict[str, str] = Field(default_factory=dict, description="Feature names present but rejected (with rejection reason)")
+    unexpected_features: List[str] = Field(default_factory=list, description="Extraneous features present in payload outside the canonical schema")
+
+
+class FlowRoutingResponse(BaseModel):
+    """Response capturing flow routing decision, completeness report, and safe ML or telemetry payload."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    flow_id: Optional[str] = None
+    source_channel: TrustedSourceChannel
+    route: RoutingDecision
+    is_eligible_for_ml: bool
+    completeness: FeatureCompletenessReport
+    ml_classification_performed: bool = False
+    routing_reason: str
+    telemetry_preserved: Dict[str, Any] = Field(default_factory=dict, description="Preserved network visibility and flow provenance metadata")
+    feature_vector: Optional[Dict[str, float]] = Field(default=None, description="Canonical 48-feature snapshot, populated ONLY if route is ML_INFERENCE")
 
