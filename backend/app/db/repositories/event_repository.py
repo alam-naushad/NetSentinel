@@ -212,3 +212,23 @@ class EventRepository:
             "severity_distribution": sev_dist,
             "status_distribution": status_dist,
         }
+
+    async def get_recent_feature_vectors(
+        self,
+        limit: int = 500,
+        source_channel: str = "PCAP_BATCH",
+    ) -> list[dict[str, Any]]:
+        """Fetch a window of recent feature vectors for drift evaluation."""
+        capped_limit = min(max(1, limit), 5000)
+        stmt = (
+            select(SecurityEvent.feature_vector)
+            .where(
+                SecurityEvent.feature_vector.is_not(None),
+                SecurityEvent.source_channel == source_channel,
+                SecurityEvent.ml_classification_performed.is_(True),
+            )
+            .order_by(SecurityEvent.event_timestamp.desc())
+            .limit(capped_limit)
+        )
+        res = await self.session.execute(stmt)
+        return [row[0] for row in res.fetchall() if row[0] is not None]

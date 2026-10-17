@@ -5,6 +5,7 @@ import { formatLatency, formatNumber } from '../../utils/formatters';
 import { MetricCard } from '../common/MetricCard';
 import { LatencyTrendChart } from './LatencyTrendChart';
 import { TriageBreakdownChart } from './TriageBreakdownChart';
+import { FeatureDriftPanel } from './FeatureDriftPanel';
 
 export const AnalyticsView: React.FC = () => {
   const { sessionEvaluations } = useApp();
@@ -82,6 +83,9 @@ export const AnalyticsView: React.FC = () => {
           <TriageBreakdownChart evaluations={sessionEvaluations} />
         </div>
       </div>
+
+      {/* Production Feature Drift Monitoring */}
+      <FeatureDriftPanel />
     </div>
   );
 };

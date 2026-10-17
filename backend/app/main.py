@@ -21,6 +21,7 @@ from app.api.routes_pcap import router as pcap_router
 from app.api.routes_zeek import router as zeek_router
 from app.api.routes_zeek_stream import router as zeek_stream_router
 from app.api.routes_telemetry import router as telemetry_router
+from app.api.routes_drift import router as drift_router
 from app.core.config import settings
 from app.core.database import check_database_connection
 from app.core.logging_config import setup_logging
@@ -255,3 +256,4 @@ app.include_router(zeek_router, prefix="/api/v1", dependencies=[Depends(get_curr
 app.include_router(zeek_stream_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(telemetry_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
 app.include_router(alerts_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(drift_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
