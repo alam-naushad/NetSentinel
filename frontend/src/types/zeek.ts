@@ -16,6 +16,42 @@ export interface ZeekConnectionSummary {
   missed_bytes: number | null;
 }
 
+export type RoutingDecision = 'ML_INFERENCE' | 'TELEMETRY_ONLY';
+
+export type TrustedSourceChannel =
+  | 'PCAP_RECONSTRUCTED'
+  | 'REST_INFERENCE'
+  | 'ZEEK_FLOWMETER'
+  | 'ZEEK_CONN'
+  | 'UNTRUSTED_CLIENT';
+
+export interface FeatureCompletenessReport {
+  total_required_features: number;
+  valid_features_count: number;
+  completeness_score: number;
+  is_eligible_for_ml: boolean;
+  route: RoutingDecision;
+  routing_reason: string;
+  missing_features: string[];
+  invalid_features: Record<string, string>;
+  unexpected_features: string[];
+}
+
+export interface FlowRoutingResponse {
+  flow_id: string | null;
+  source_channel: TrustedSourceChannel;
+  route: RoutingDecision;
+  is_eligible_for_ml: boolean;
+  completeness: FeatureCompletenessReport;
+  ml_classification_performed: boolean;
+  routing_reason: string;
+  telemetry_preserved?: Record<string, any>;
+  feature_vector?: Record<string, number> | null;
+  is_sample_evaluation?: boolean;
+  sample_record_identifier?: string | null;
+  evaluation_scope?: 'SAMPLE_RECORD' | 'FLOW_RECORD' | 'FILE_AGGREGATE';
+}
+
 export interface ZeekAnalysisSummary {
   filename: string;
   file_size_bytes: number;
@@ -29,6 +65,7 @@ export interface ZeekAnalysisSummary {
   processing_time_ms: number;
   ml_classification_performed: false;
   analysis_type: 'TELEMETRY_ONLY';
+  completeness_report?: FlowRoutingResponse | null;
 }
 
 export interface ZeekAnalysisResponse {

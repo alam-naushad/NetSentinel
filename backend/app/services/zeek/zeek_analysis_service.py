@@ -8,8 +8,13 @@ from app.core.config import settings
 from app.services.zeek.zeek_connection_record import ZeekConnectionRecord
 from app.services.zeek.zeek_log_parser import ZeekLogParser, ZeekParseResult
 from app.schemas.zeek import (
+    FlowRoutingResponse,
     ZeekConnectionSummary,
     ZeekAnalysisSummary,
+)
+from app.services.zeek.feature_completeness import (
+    TrustedSourceChannel,
+    route_flow,
 )
 
 
@@ -81,7 +86,26 @@ class ZeekAnalysisService:
         end_time = time.time()
         processing_time_ms = round((end_time - start_time) * 1000.0, 3)
 
-        # 5. Build ZeekAnalysisSummary
+        # 5. Evaluate feature completeness on actual parsed telemetry records
+        completeness_report: Optional[FlowRoutingResponse] = None
+        if raw_records:
+            sample_rec = raw_records[0]
+            sample_dict = sample_rec.model_dump()
+            sample_uid = sample_rec.uid
+            completeness_report = route_flow(
+                sample_dict,
+                source_channel=TrustedSourceChannel.ZEEK_CONN,
+                provenance={
+                    "uid": sample_uid,
+                    "filename": filename,
+                    "total_connections_in_file": len(connections),
+                },
+                is_sample_evaluation=True,
+                sample_record_identifier=sample_uid,
+                evaluation_scope="SAMPLE_RECORD",
+            )
+
+        # 6. Build ZeekAnalysisSummary
         summary = ZeekAnalysisSummary(
             filename=filename,
             file_size_bytes=file_size_bytes,
@@ -94,7 +118,8 @@ class ZeekAnalysisService:
             conn_state_distribution=dict(conn_state_distribution),
             processing_time_ms=processing_time_ms,
             ml_classification_performed=False,
-            analysis_type="TELEMETRY_ONLY"
+            analysis_type="TELEMETRY_ONLY",
+            completeness_report=completeness_report,
         )
 
         # 6. Return ZeekAnalysisResult

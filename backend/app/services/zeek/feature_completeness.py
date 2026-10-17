@@ -301,6 +301,9 @@ def route_flow(
     source_channel: TrustedSourceChannel,
     provenance: Mapping[str, Any] | None = None,
     allow_hyphen_alias: bool = True,
+    is_sample_evaluation: bool = False,
+    sample_record_identifier: str | None = None,
+    evaluation_scope: str = "FLOW_RECORD",
 ) -> FlowRoutingResponse:
     """Deterministically route a flow record to ML_INFERENCE or TELEMETRY_ONLY.
 
@@ -372,6 +375,9 @@ def route_flow(
             routing_reason=routing_reason,
             telemetry_preserved=telemetry_preserved,
             feature_vector=feature_vector,
+            is_sample_evaluation=is_sample_evaluation,
+            sample_record_identifier=sample_record_identifier or flow_id,
+            evaluation_scope=evaluation_scope,
         )
 
     # Telemetry-Only Route Determination
@@ -423,6 +429,9 @@ def route_flow(
         routing_reason=routing_reason,
         telemetry_preserved=telemetry_preserved,
         feature_vector=None,
+        is_sample_evaluation=is_sample_evaluation,
+        sample_record_identifier=sample_record_identifier or flow_id,
+        evaluation_scope=evaluation_scope,
     )
 
 

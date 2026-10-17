@@ -49,6 +49,26 @@ class TestZeekAnalysisService(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(len(summary.service_distribution), 0)
         self.assertIn("SF", summary.conn_state_distribution)
 
+        # Phase 2A Observability: Verify sample-level completeness report
+        self.assertIsNotNone(summary.completeness_report)
+        rep = summary.completeness_report
+        self.assertEqual(rep.route.value, "TELEMETRY_ONLY")
+        self.assertTrue(rep.is_sample_evaluation)
+        self.assertEqual(rep.sample_record_identifier, "CHhAvVGS1DHF508n6")
+        self.assertEqual(rep.evaluation_scope, "SAMPLE_RECORD")
+        self.assertEqual(rep.completeness.valid_features_count, 0)
+        self.assertEqual(rep.completeness.completeness_score, 0.0)
+        self.assertEqual(len(rep.completeness.missing_features), 48)
+        self.assertEqual(rep.completeness.invalid_features, {})
+        self.assertIn("ZEEK_CONN", rep.routing_reason)
+        self.assertFalse(summary.ml_classification_performed)
+
+    async def test_empty_analysis_leaves_completeness_report_none(self):
+        service = ZeekAnalysisService()
+        result = service.analyze(b"", "empty.log", 0, "fake_sha256")
+        self.assertEqual(result.summary.total_connections_parsed, 0)
+        self.assertIsNone(result.summary.completeness_report)
+
     async def test_zeek_persistence_to_database(self):
         with open(self.sample_json, "rb") as f:
             content = f.read()

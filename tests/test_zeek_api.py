@@ -59,6 +59,19 @@ class TestZeekApi(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(data["persisted"])
         self.assertIsInstance(data["job_id"], str)
 
+        # Phase 2A Observability: Verify completeness_report in JSON response
+        self.assertIn("completeness_report", data["summary"])
+        rep = data["summary"]["completeness_report"]
+        self.assertIsNotNone(rep)
+        self.assertEqual(rep["route"], "TELEMETRY_ONLY")
+        self.assertEqual(rep["source_channel"], "ZEEK_CONN")
+        self.assertTrue(rep["is_sample_evaluation"])
+        self.assertEqual(rep["sample_record_identifier"], "CHhAvVGS1DHF508n6")
+        self.assertEqual(rep["evaluation_scope"], "SAMPLE_RECORD")
+        self.assertEqual(rep["completeness"]["valid_features_count"], 0)
+        self.assertEqual(rep["completeness"]["completeness_score"], 0.0)
+        self.assertEqual(len(rep["completeness"]["missing_features"]), 48)
+
     def test_upload_tsv_conn_log(self):
         with open(self.sample_tsv, "rb") as f:
             files = {"file": ("sample_conn.tsv", f, "text/tab-separated-values")}
@@ -68,6 +81,8 @@ class TestZeekApi(unittest.IsolatedAsyncioTestCase):
         data = response.json()
         self.assertEqual(data["summary"]["total_connections_parsed"], 15)
         self.assertTrue(data["persisted"])
+        self.assertIsNotNone(data["summary"]["completeness_report"])
+        self.assertEqual(data["summary"]["completeness_report"]["route"], "TELEMETRY_ONLY")
 
     def test_empty_file_rejected(self):
         files = {"file": ("empty.log", io.BytesIO(b""), "application/octet-stream")}

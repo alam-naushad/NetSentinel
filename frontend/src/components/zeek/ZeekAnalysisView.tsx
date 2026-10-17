@@ -4,6 +4,7 @@ import { zeekApi } from '../../api/zeekApi';
 import { ZeekAnalysisResponse, ZeekConnectionSummary } from '../../types/zeek';
 import { ZeekUploadZone } from './ZeekUploadZone';
 import { ZeekSummaryCards } from './ZeekSummaryCards';
+import { ZeekCompletenessPanel } from './ZeekCompletenessPanel';
 import { LoadingSpinner } from '../common/LoadingState';
 import { ErrorAlert } from '../common/ErrorAlert';
 import { ApiError } from '../../api/client';
@@ -277,16 +278,8 @@ export const ZeekAnalysisView: React.FC = () => {
       {analysisResult && (
         <div className="space-y-6 animate-in fade-in duration-200">
           
-          {/* Telemetry-Only Banner */}
-          <div className="flex items-start gap-3 p-3.5 bg-blue-950/40 border border-blue-800/40 rounded-xl text-blue-300 text-xs">
-            <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
-            <div className="space-y-0.5">
-              <p className="font-semibold text-blue-200">Telemetry Only — ML Classification Not Performed</p>
-              <p className="text-blue-300/80 leading-relaxed">
-                This view displays native Zeek connection metadata. No attack classification, risk score, or anomaly detection has been applied to these connections.
-              </p>
-            </div>
-          </div>
+          {/* Feature Completeness & Safe Routing Observability Panel */}
+          <ZeekCompletenessPanel summary={analysisResult.summary} />
 
           <ZeekSummaryCards summary={analysisResult.summary} />
 
